@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+:root {
+  --brand: #16A34A;
+  --brand-hover: #15803D;
+  --brand-light: #DCFCE7;
+  --amber: #F59E0B;
+  --amber-light: #FEF3C7;
+  --red: #EF4444;
+  --red-light: #FEE2E2;
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --text-1: #111827;
+  --text-2: #374151;
+  --text-3: #6B7280;
+  --text-4: #9CA3AF;
+  --admin-bg: #F3F4F6;
+  --admin-sidebar: #111827;
+  --admin-sidebar-hover: #1F2937;
+  --admin-sidebar-active: #16A34A;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: 'Chakra Petch', sans-serif;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Scrollbar */
+.no-scroll::-webkit-scrollbar { display: none; }
+.no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes countdown-ring {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 283; }
+}
+
+@keyframes vs-pulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(22, 163, 74, 0.6); }
+  50% { text-shadow: 0 0 40px rgba(22, 163, 74, 1), 0 0 60px rgba(22, 163, 74, 0.4); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 400px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+.animate-vs-pulse {
+  animation: vs-pulse 2s ease-in-out infinite;
+}
+
+.countdown-ring {
+  animation: countdown-ring 300s linear forwards;
+}
+
+/* Glow effects */
+.glow-green {
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.15), 0 4px 16px rgba(22, 163, 74, 0.2);
+}
+
+.glow-green-strong {
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.3), 0 8px 32px rgba(22, 163, 74, 0.3);
+}
+
+/* VS layout gradient */
+.vs-bg {
+  background: linear-gradient(135deg, #0a0a0a 0%, #0f1f0f 50%, #0a0a0a 100%);
+}
+
+/* Admin sidebar text */
+.sidebar-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Table styles */
+.data-table th {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.data-table td {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
