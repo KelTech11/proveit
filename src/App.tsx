@@ -135,63 +135,60 @@ function VerificationGate({ onNavigate }: { onNavigate: (s: string) => void }) {
 
 function SplashScreen({ onDone }: { onDone: () => void }) {
   const [leaving, setLeaving] = useState(false);
+  const [started, setStarted] = useState(false);
 
-  useEffect(() => {
-    const a = setTimeout(() => setLeaving(true), 1900);
-    const b = setTimeout(onDone, 2400);
-
-    let ctx: AudioContext | null = null;
-    let played = false;
-
-    const schedule = () => {
-      if (!ctx) return;
-      const c = ctx;
+  const start = () => {
+    if (started) return;
+    setStarted(true);
+    try {
+      const AC = window.AudioContext || (window as any).webkitAudioContext;
+      const c = new AC();
+      c.resume();
       const t = c.currentTime;
-      const tone = (f1: number, f2: number, start: number, dur: number, type: OscillatorType, vol: number) => {
+      const tone = (f1: number, f2: number, at: number, dur: number, type: OscillatorType, vol: number) => {
         const o = c.createOscillator();
         const g = c.createGain();
         o.type = type;
-        o.frequency.setValueAtTime(f1, t + start);
-        o.frequency.exponentialRampToValueAtTime(f2, t + start + dur);
-        g.gain.setValueAtTime(0.0001, t + start);
-        g.gain.exponentialRampToValueAtTime(vol, t + start + 0.05);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
+        o.frequency.setValueAtTime(f1, t + at);
+        o.frequency.exponentialRampToValueAtTime(f2, t + at + dur);
+        g.gain.setValueAtTime(0.0001, t + at);
+        g.gain.exponentialRampToValueAtTime(vol, t + at + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
         o.connect(g);
         g.connect(c.destination);
-        o.start(t + start);
-        o.stop(t + start + dur + 0.05);
+        o.start(t + at);
+        o.stop(t + at + dur + 0.05);
       };
       tone(120, 600, 0, 0.8, 'sawtooth', 0.08);
       tone(660, 660, 0.85, 0.5, 'sine', 0.2);
       tone(990, 990, 1.0, 0.7, 'sine', 0.15);
-    };
+      setTimeout(() => c.close().catch(() => {}), 3000);
+    } catch {}
+  };
 
-    const playSound = () => {
-      if (played) return;
-      try {
-        const AC = window.AudioContext || (window as any).webkitAudioContext;
-        ctx = ctx ?? new AC();
-        ctx.resume().then(() => {
-          if (!played && ctx && ctx.state === 'running') {
-            played = true;
-            schedule();
-          }
-        }).catch(() => {});
-      } catch {}
-    };
+  useEffect(() => {
+    if (!started) return;
+    const a = setTimeout(() => setLeaving(true), 1900);
+    const b = setTimeout(onDone, 2400);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [started]);
 
-    playSound();
-    window.addEventListener('pointerdown', playSound);
-    window.addEventListener('keydown', playSound);
-
-    return () => {
-      clearTimeout(a);
-      clearTimeout(b);
-      window.removeEventListener('pointerdown', playSound);
-      window.removeEventListener('keydown', playSound);
-      ctx?.close().catch(() => {});
-    };
-  }, []);
+  if (!started) {
+    return (
+      <div
+        onClick={start}
+        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center cursor-pointer select-none"
+      >
+        <img src={logo} alt="ProveIt" className="h-20 w-auto max-w-[70vw] object-contain" />
+        <p
+          className="mt-8 text-sm text-gray-400 tracking-widest uppercase animate-pulse"
+          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          Tap to enter
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
