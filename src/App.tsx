@@ -133,6 +133,55 @@ function VerificationGate({ onNavigate }: { onNavigate: (s: string) => void }) {
   );
 }
 
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    const a = setTimeout(() => setLeaving(true), 1900);
+    const b = setTimeout(onDone, 2400);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
+      style={{ opacity: leaving ? 0 : 1, transition: 'opacity 0.5s ease' }}
+    >
+      <style>{`
+        @keyframes splash-logo { from { opacity: 0; transform: scale(0.6); filter: blur(8px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+        @keyframes splash-glow { 0%, 100% { opacity: 0.25; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.15); } }
+        @keyframes splash-text { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes splash-bar { from { width: 0; } to { width: 120px; } }
+      `}</style>
+
+      <div className="relative flex items-center justify-center">
+        <div
+          className="absolute w-56 h-56 rounded-full bg-green-500 blur-3xl"
+          style={{ animation: 'splash-glow 1.8s ease-in-out infinite' }}
+        />
+        <img
+          src={logo}
+          alt="ProveIt"
+          className="relative h-20 w-auto max-w-[70vw] object-contain"
+          style={{ animation: 'splash-logo 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both' }}
+        />
+      </div>
+
+      <p
+        className="relative mt-6 text-3xl font-bold text-white tracking-wide"
+        style={{ fontFamily: 'Chakra Petch, sans-serif', animation: 'splash-text 0.6s ease-out 0.7s both' }}
+      >
+        Prove<span className="text-green-500">It</span>
+      </p>
+
+      <div
+        className="relative mt-3 h-[3px] rounded-full bg-green-500"
+        style={{ animation: 'splash-bar 0.7s ease-out 1s both' }}
+      />
+    </div>
+  );
+}
+
 function ScreenFallback() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -442,6 +491,7 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [screen, setScreen] = useState<Screen>('home');
   const [prevScreen, setPrevScreen] = useState<Screen>('dashboard');
   const [matchDraft, setMatchDraft] = useState<MatchDraft | null>(null);
@@ -483,6 +533,7 @@ export default function App() {
 
   return (
     <>
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       {admin ? (
         <AdminLayout screen={screen as AdminScreen} onNavigate={navigate} />
       ) : (
