@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { me } from '../data';
 
 // 1. IMPORTING YOUR EXACT LOCAL IMAGES
-import fcMobileCover from '../assets/EA-SPORTS-FC-Mobile-27-Season-Update-mbappe-cover.jpg'; 
-import codmCover from '../assets/CODM imj.jpg'; 
-import freeFireCover from '../assets/Free Fire.jpg'; 
+import fcMobileCover from '../assets/fc-mobile.jpg';
+import codmCover from '../assets/codm.jpg';
+import freeFireCover from '../assets/freefire.jpg'; 
 
 // --- Game Data specifically tailored to match the design ---
 export type GameType = 'CODM' | 'FC Mobile' | 'eFootball' | 'Free Fire' | 'PUBG Mobile';
