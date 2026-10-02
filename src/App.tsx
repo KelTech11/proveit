@@ -139,7 +139,58 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const a = setTimeout(() => setLeaving(true), 1900);
     const b = setTimeout(onDone, 2400);
-    return () => { clearTimeout(a); clearTimeout(b); };
+
+    let ctx: AudioContext | null = null;
+    let played = false;
+
+    const schedule = () => {
+      if (!ctx) return;
+      const c = ctx;
+      const t = c.currentTime;
+      const tone = (f1: number, f2: number, start: number, dur: number, type: OscillatorType, vol: number) => {
+        const o = c.createOscillator();
+        const g = c.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(f1, t + start);
+        o.frequency.exponentialRampToValueAtTime(f2, t + start + dur);
+        g.gain.setValueAtTime(0.0001, t + start);
+        g.gain.exponentialRampToValueAtTime(vol, t + start + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
+        o.connect(g);
+        g.connect(c.destination);
+        o.start(t + start);
+        o.stop(t + start + dur + 0.05);
+      };
+      tone(120, 600, 0, 0.8, 'sawtooth', 0.08);
+      tone(660, 660, 0.85, 0.5, 'sine', 0.2);
+      tone(990, 990, 1.0, 0.7, 'sine', 0.15);
+    };
+
+    const playSound = () => {
+      if (played) return;
+      try {
+        const AC = window.AudioContext || (window as any).webkitAudioContext;
+        ctx = ctx ?? new AC();
+        ctx.resume().then(() => {
+          if (!played && ctx && ctx.state === 'running') {
+            played = true;
+            schedule();
+          }
+        }).catch(() => {});
+      } catch {}
+    };
+
+    playSound();
+    window.addEventListener('pointerdown', playSound);
+    window.addEventListener('keydown', playSound);
+
+    return () => {
+      clearTimeout(a);
+      clearTimeout(b);
+      window.removeEventListener('pointerdown', playSound);
+      window.removeEventListener('keydown', playSound);
+      ctx?.close().catch(() => {});
+    };
   }, []);
 
   return (
