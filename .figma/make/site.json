@@ -1,4 +1,7 @@
 {
+  "title": "ProveIt | You dey claim? Prove am.",
+  "icons": { "icon": "/favicon.png" },
+  "openGraph": { "image": "https://proveit-six.vercel.app/og-image.png" },
   "description": "Connect with players in Ghana and Nigeria to wager on skill-based games, ensuring secure transactions and a fair dispute resolution process.",
   "robots": {
     "index": false
