@@ -539,8 +539,12 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [screen, setScreen] = useState<Screen>('home');
+  const [showSplash, setShowSplash] = useState(() => {
+    try { return !sessionStorage.getItem('proveit_splash_seen'); } catch { return true; }
+  });
+  const [screen, setScreen] = useState<Screen>(() => {
+    try { return (sessionStorage.getItem('proveit_screen') as Screen) || 'home'; } catch { return 'home'; }
+  });
   const [prevScreen, setPrevScreen] = useState<Screen>('dashboard');
   const [matchDraft, setMatchDraft] = useState<MatchDraft | null>(null);
   const [balance, setBalance] = useState(2840);
@@ -555,6 +559,10 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
   const [joinCode, setJoinCode] = useState('');
+
+  useEffect(() => {
+    try { sessionStorage.setItem('proveit_screen', screen); } catch {}
+  }, [screen]);
 
   const addNotif = (type: Notification['type'], title: string, body: string) => {
     const n = { id: `n-${Date.now()}`, type, title, body, time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
@@ -581,7 +589,7 @@ export default function App() {
 
   return (
     <>
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onDone={() => { try { sessionStorage.setItem('proveit_splash_seen', '1'); } catch {} setShowSplash(false); }} />}
       {admin ? (
         <AdminLayout screen={screen as AdminScreen} onNavigate={navigate} />
       ) : (

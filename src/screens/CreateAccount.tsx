@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import logo from '../assets/proveit-logo.png';
 import { Button, Input, PhoneInput } from '../components/ui';
 import { type Country } from '../data';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+const DRAFT_KEY = 'proveit_signup_draft';
+const loadDraft = () => {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch { return {}; }
+};
+
 export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: (s: string) => void; onSignedUp: () => void }) {
-  const [step, setStep] = useState<Step>(1);
+  const [draft] = useState<any>(loadDraft);
+  const [step, setStep] = useState<Step>(Math.min(Number(draft.step) || 1, 4) as Step);
 
   // Step 1
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [country, setCountry] = useState<Country>('GH');
-  const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState<string>(draft.fullName || '');
+  const [username, setUsername] = useState<string>(draft.username || '');
+  const [email, setEmail] = useState<string>(draft.email || '');
+  const [country, setCountry] = useState<Country>(draft.country === 'NG' ? 'NG' : 'GH');
+  const [phone, setPhone] = useState<string>(draft.phone || '');
 
   // Step 2
   const [otp, setOtp] = useState('');
@@ -24,8 +30,8 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   const [underageBlocked, setUnderageBlocked] = useState(false);
 
   // Step 4
-  const [idType, setIdType] = useState('ghana_card');
-  const [idNumber, setIdNumber] = useState('GHA-');
+  const [idType, setIdType] = useState(draft.country === 'NG' ? 'nin' : 'ghana_card');
+  const [idNumber, setIdNumber] = useState(draft.country === 'NG' ? '' : 'GHA-');
   const [idFrontUploaded, setIdFrontUploaded] = useState(false);
   const [idBackUploaded, setIdBackUploaded] = useState(false);
   const [selfieUploaded, setSelfieUploaded] = useState(false);
@@ -40,7 +46,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   const [gameScreenshotUploaded, setGameScreenshotUploaded] = useState(false);
 
   // Step 7 (submitted state)
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(!!draft.submitted);
 
   const next = () => setStep(s => Math.min(s + 1, 7) as Step);
   const back = () => setStep(s => Math.max(s - 1, 1) as Step);
@@ -78,11 +84,20 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
     : /^[A-Z0-9]{6,9}$/.test(idNumber);
   const passwordValid = password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
 
+  const prevCountry = useRef(country);
   useEffect(() => {
+    if (prevCountry.current === country) return;
+    prevCountry.current = country;
     setPhone('');
     setIdType(country === 'GH' ? 'ghana_card' : 'nin');
     setIdNumber(country === 'GH' ? 'GHA-' : '');
   }, [country]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, fullName, username, email, country, phone, submitted }));
+    } catch {}
+  }, [step, fullName, username, email, country, phone, submitted]);
 
   const pickImage = (key: string, setDone: (v: boolean) => void, capture?: 'user' | 'environment') => {
     const input = document.createElement('input');
@@ -126,7 +141,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
           join matches or withdraw until verification is complete. This usually takes a few hours,
           and we'll notify you by email.
         </p>
-        <Button variant="primary" size="lg" onClick={() => { onSignedUp(); onNavigate('dashboard'); }}>
+        <Button variant="primary" size="lg" onClick={() => { try { localStorage.removeItem(DRAFT_KEY); } catch {} onSignedUp(); onNavigate('dashboard'); }}>
           Go to my account
         </Button>
       </div>
