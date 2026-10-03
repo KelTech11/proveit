@@ -25,6 +25,7 @@ const MatchLost = lazy(() => import('./screens/MatchLost'));
 const Leaderboard = lazy(() => import('./screens/Leaderboard'));
 const Deposit = lazy(() => import('./screens/Deposit'));
 const JoinMatch = lazy(() => import('./screens/JoinMatch'));
+const MatchHistory = lazy(() => import('./screens/MatchHistory'));
 
 // Admin screens
 const AdminOverview = lazy(() => import('./screens/admin/Overview'));
@@ -33,9 +34,19 @@ const AdminDisputeQueue = lazy(() => import('./screens/admin/DisputeQueue'));
 const AdminDisputeResolution = lazy(() => import('./screens/admin/DisputeResolution'));
 const AdminUserProfile = lazy(() => import('./screens/admin/UserProfile'));
 
-type ConsumerScreen = 'home' | 'login' | 'create-account' | 'dashboard' | 'create-match' | 'match-lobby' | 'active-match' | 'dispute' | 'payout' | 'settings' | 'notifications' | 'profile' | 'rules' | 'result' | 'lost' | 'locked' | 'deposit' | 'leaderboard' | 'join';
+type ConsumerScreen = 'home' | 'login' | 'create-account' | 'dashboard' | 'create-match' | 'match-lobby' | 'active-match' | 'dispute' | 'payout' | 'settings' | 'notifications' | 'profile' | 'rules' | 'result' | 'lost' | 'locked' | 'deposit' | 'leaderboard' | 'join' | 'matches';
 type AdminScreen = 'admin-overview' | 'admin-match-feed' | 'admin-dispute-queue' | 'admin-dispute-resolution' | 'admin-user-profile';
 type Screen = ConsumerScreen | AdminScreen;
+
+export type MatchRecord = {
+  id: string;
+  game: MatchDraft['game'];
+  mode: string;
+  wager: number;
+  result: 'won' | 'lost';
+  amount: number; // amount won or lost
+  date: string;
+};
 
 const ADMIN_SCREENS: Screen[] = ['admin-overview', 'admin-match-feed', 'admin-dispute-queue', 'admin-dispute-resolution', 'admin-user-profile']
 const isAdmin = (s: Screen) => ADMIN_SCREENS.includes(s);
@@ -66,6 +77,7 @@ const DEMO_SCREENS: { label: string; id: Screen }[] = [
   { label: 'Match Lost', id: 'lost' },
   { label: 'Payout', id: 'payout' },
   { label: 'Join Match', id: 'join' },
+  { label: 'My Matches 📋', id: 'matches' },
   { label: 'Leaderboard 🏆', id: 'leaderboard' },
   { label: 'Settings', id: 'settings' },
   { label: 'Notifications', id: 'notifications' },
@@ -286,7 +298,7 @@ function DemoNav({ current, onChange, verified, onToggleVerified }: { current: S
   );
 }
 
-function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive, stats }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void; stats: { wins: number; losses: number; streak: number; xp: number } }) {
+function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive, stats, matchHistory }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void; stats: { wins: number; losses: number; streak: number; xp: number }; matchHistory: MatchRecord[] }) {
   const isLobby = screen === 'match-lobby';
   const { profile } = useProfile();
 
@@ -381,6 +393,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'leaderboard' && <Leaderboard onNavigate={onNavigate} />}
           {screen === 'locked' && <VerificationGate onNavigate={onNavigate} />}
           {screen === 'join' && <JoinMatch onNavigate={onNavigate} code={joinCode} onJoined={onJoined} />}
+          {screen === 'matches' && <MatchHistory onNavigate={onNavigate} history={matchHistory} stats={stats} />}
         </Suspense>
       </main>
 
@@ -570,6 +583,7 @@ function AppInner() {
   const [verified, setVerified] = useState(true);
   const [disputeActive, setDisputeActive] = useState(false);
   const [stats, setStats] = useState({ wins: 0, losses: 0, streak: 0, xp: 0 });
+  const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
   const [notifs, setNotifs] = useState<Notification[]>([]);
   const [toast, setToast] = useState<Notification | null>(null);
 
@@ -626,10 +640,19 @@ function AppInner() {
           disputeActive={disputeActive}
           setDisputeActive={setDisputeActive}
           stats={stats}
+          matchHistory={matchHistory}
           onMatchCreated={(d) => { setMatchDraft(d); addNotif('match_invite', 'Match created', `${d.game} ${d.mode}, GHS ${d.wager.toFixed(2)} wager. Invite link is ready.`); }}
           balance={balance}
           locked={locked}
-          onWin={(w) => { setBalance(b => b + w); setLocked(0); setStats(s => ({ wins: s.wins + 1, losses: s.losses, streak: s.streak + 1, xp: s.xp + 100 })); addNotif('payout', 'You won!', `GHS ${w.toFixed(2)} was added to your balance.`); }}
+          onWin={(w) => {
+            setBalance(b => b + w);
+            setLocked(0);
+            setStats(s => ({ wins: s.wins + 1, losses: s.losses, streak: s.streak + 1, xp: s.xp + 100 }));
+            if (matchDraft) {
+              setMatchHistory(h => [{ id: `h-${Date.now()}`, game: matchDraft.game, mode: matchDraft.mode, wager: matchDraft.wager, result: 'won', amount: w, date: new Date().toISOString() }, ...h]);
+            }
+            addNotif('payout', 'You won!', `GHS ${w.toFixed(2)} was added to your balance.`);
+          }}
           onWithdraw={(a) => { setBalance(b => b - a); addNotif('payout', 'Withdrawal requested', `GHS ${a.toFixed(2)} is on its way to your account.`); }}
           onLock={(a) => { setBalance(b => b - a); setLocked(l => l + a); addNotif('match_invite', 'Funds locked in escrow', `GHS ${a.toFixed(2)} is locked. Match is starting.`); }}
           notifs={notifs}
@@ -641,7 +664,14 @@ function AppInner() {
           joinCode={joinCode}
           onJoinCode={setJoinCode}
           onNotify={addNotif}
-          onLose={() => { setLocked(0); setStats(s => ({ ...s, losses: s.losses + 1, streak: 0, xp: s.xp + 25 })); addNotif('match_invite', 'Match lost', 'Your stake was released to your opponent. Good game!'); }}
+          onLose={() => {
+            setLocked(0);
+            setStats(s => ({ ...s, losses: s.losses + 1, streak: 0, xp: s.xp + 25 }));
+            if (matchDraft) {
+              setMatchHistory(h => [{ id: `h-${Date.now()}`, game: matchDraft.game, mode: matchDraft.mode, wager: matchDraft.wager, result: 'lost', amount: matchDraft.wager, date: new Date().toISOString() }, ...h]);
+            }
+            addNotif('match_invite', 'Match lost', 'Your stake was released to your opponent. Good game!');
+          }}
           onJoined={(d) => { setMatchDraft(d); addNotif('match_invite', 'Match joined', `${d.game} ${d.mode}, GHS ${d.wager.toFixed(2)} wager. You're in the lobby.`); }}
         />
       )}
