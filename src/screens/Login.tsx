@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import logo from '../assets/proveit-logo.png';
 import { Button, Input } from '../components/ui';
+import ForgotPassword from './ForgotPassword';
 
 export default function Login({ onNavigate }: { onNavigate: (s: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [tried, setTried] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   const errors: Record<string, string> = {};
   if (username.length < 3) errors.username = 'Enter your username';
@@ -87,9 +89,14 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
 
           {/* Forgot password */}
           <div className="text-right mb-6">
-            <span className="text-sm text-green-600 font-semibold cursor-pointer hover:text-green-700 transition-colors" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <button
+              type="button"
+              onClick={() => setShowForgot(true)}
+              className="text-sm text-green-600 font-semibold hover:text-green-700 transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
               Forgot Password?
-            </span>
+            </button>
           </div>
 
           {/* Sign in button */}
@@ -125,6 +132,8 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
           </p>
         </div>
       </main>
+
+      {showForgot && <ForgotPassword onClose={() => setShowForgot(false)} />}
     </div>
   );
 }
