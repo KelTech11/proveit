@@ -287,7 +287,7 @@ function DemoNav({ current, onChange, verified, onToggleVerified }: { current: S
   );
 }
 
-function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void }) {
+function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void }) {
   const isLobby = screen === 'match-lobby';
 
   return (
@@ -361,11 +361,11 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'home' && <Home onNavigate={onNavigate} />}
           {screen === 'login' && <Login onNavigate={onNavigate} />}
           {screen === 'create-account' && <CreateAccount onNavigate={onNavigate} onSignedUp={onSignedUp} />}
-          {screen === 'dashboard' && <Dashboard onNavigate={onNavigate} balance={balance} locked={locked} unread={notifs.filter(n => !n.read).length} verified={verified} />}
+          {screen === 'dashboard' && <Dashboard onNavigate={onNavigate} balance={balance} locked={locked} unread={notifs.filter(n => !n.read).length} verified={verified} disputeActive={disputeActive} />}
           {screen === 'create-match' && <CreateMatch onNavigate={onNavigate} onMatchCreated={onMatchCreated} onJoinCode={onJoinCode} />}
           {screen === 'match-lobby' && <MatchLobby onNavigate={onNavigate} matchDraft={matchDraft} onLock={onLock} onNotify={onNotify} />}
           {screen === 'active-match' && <ActiveMatch onNavigate={onNavigate} matchDraft={matchDraft} onWin={onWin} onNotify={onNotify} onLose={onLose} />}
-          {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} />}
+          {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} onDisputeStatusChange={setDisputeActive} />}
           {screen === 'payout' && <Payout onNavigate={onNavigate} balance={balance} onWithdraw={onWithdraw} />}
           {screen === 'deposit' && <Deposit onNavigate={onNavigate} balance={balance} onDeposit={onDeposit} />}
           {screen === 'settings' && <Settings onNavigate={onNavigate} />}
@@ -550,6 +550,7 @@ export default function App() {
   const [balance, setBalance] = useState(2840);
   const [locked, setLocked] = useState(0);
   const [verified, setVerified] = useState(true);
+  const [disputeActive, setDisputeActive] = useState(false);
   const [notifs, setNotifs] = useState<Notification[]>([]);
   const [toast, setToast] = useState<Notification | null>(null);
 
@@ -597,6 +598,8 @@ export default function App() {
           screen={screen as ConsumerScreen}
           onNavigate={navigate}
           matchDraft={matchDraft}
+          disputeActive={disputeActive}
+          setDisputeActive={setDisputeActive}
           onMatchCreated={(d) => { setMatchDraft(d); addNotif('match_invite', 'Match created', `${d.game} ${d.mode}, GHS ${d.wager.toFixed(2)} wager. Invite link is ready.`); }}
           balance={balance}
           locked={locked}

@@ -23,7 +23,7 @@ const GameIcon = ({ game }: { game: string }) => {
   );
 };
 
-export default function Dashboard({ onNavigate, balance, locked, unread, verified }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean }) {
+export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean }) {
   const winCount = 1; 
   const totalPlayed = 2;
   const winRate = 50;
@@ -99,6 +99,22 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <p className="text-xs text-amber-800 mt-0.5">We're reviewing your ID. Until you're approved you can't create or join matches or withdraw.</p>
                 </div>
               </div>
+            )}
+
+            {disputeActive && (
+              <button
+                onClick={() => onNavigate('dispute')}
+                className="w-full text-left bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 hover:bg-red-100 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-xl">🛡️</span>
+                  <div>
+                    <p className="text-sm font-black text-red-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Dispute under review</p>
+                    <p className="text-xs text-red-800 mt-0.5">GHS {locked.toFixed(2)} is locked until a decision is made. You'll get an email the moment it's resolved.</p>
+                  </div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-400 shrink-0"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
             )}
             
             {/* ROW 1: Hero, Wallet, Platform Feed */}

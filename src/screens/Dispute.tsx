@@ -13,9 +13,14 @@ const REVIEW_WINDOW_SECONDS = 24 * 60 * 60; // 24h target turnaround
 
 type DisputeStage = 'opened' | 'evidence' | 'review' | 'resolved';
 
-export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null }) {
+export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onDisputeStatusChange: (active: boolean) => void }) {
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
+
+  useEffect(() => {
+    onDisputeStatusChange(true);
+    return () => onDisputeStatusChange(false);
+  }, []);
 
   const [disputeId] = useState(() => `D-${Math.random().toString(36).slice(2, 7).toUpperCase()}`);
   const [youSubmitted] = useState(true); // you only land here after uploading, so this is always true
@@ -44,6 +49,10 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
   }, [opponentSubmitted, outcome]);
 
   const stage: DisputeStage = outcome ? 'resolved' : !opponentSubmitted ? 'evidence' : 'review';
+
+  useEffect(() => {
+    if (outcome) onDisputeStatusChange(false);
+  }, [outcome]);
 
   const fmtCountdown = (s: number) => {
     const d = Math.floor(s / 86400);
