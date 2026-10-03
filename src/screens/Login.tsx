@@ -5,6 +5,23 @@ import { Button, Input } from '../components/ui';
 export default function Login({ onNavigate }: { onNavigate: (s: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [tried, setTried] = useState(false);
+
+  const errors: Record<string, string> = {};
+  if (username.length < 3) errors.username = 'Enter your username';
+  if (!password) errors.password = 'Enter your password';
+
+  const signIn = () => {
+    if (Object.keys(errors).length === 0) { onNavigate('dashboard'); return; }
+    setTried(true);
+    setTimeout(() => {
+      const el = document.querySelector('.border-red-400') as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (el.querySelector('input') as HTMLElement | null)?.focus({ preventScroll: true });
+    }, 60);
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -23,7 +40,10 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
 
       {/* Main content */}
       <main className="flex-1 flex items-start justify-center px-6 pt-8 pb-10">
-        <div className="w-full max-w-sm animate-fade-up">
+        <div
+          className="w-full max-w-sm animate-fade-up"
+          onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') signIn(); }}
+        >
           {/* Headline */}
           <div className="mb-8">
             <h1
@@ -44,8 +64,10 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
               label="Username"
               type="text"
               value={username}
-              onChange={setUsername}
+              onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))}
               placeholder="Enter your username"
+              autoComplete="username"
+              error={tried ? errors.username : undefined}
             />
           </div>
 
@@ -53,10 +75,13 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
           <div className="mb-2">
             <Input
               label="Password"
-              type="password"
+              type={showPw ? 'text' : 'password'}
               value={password}
               onChange={setPassword}
               placeholder="Enter your password"
+              autoComplete="current-password"
+              error={tried ? errors.password : undefined}
+              suffix={<button type="button" onClick={() => setShowPw(s => !s)} className="text-xs font-semibold text-gray-500 hover:text-gray-800">{showPw ? 'Hide' : 'Show'}</button>}
             />
           </div>
 
@@ -73,7 +98,7 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
               variant="primary"
               size="lg"
               fullWidth
-              onClick={() => onNavigate('dashboard')}
+              onClick={signIn}
             >
               Sign In
             </Button>
