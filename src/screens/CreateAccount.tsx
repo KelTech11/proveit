@@ -45,6 +45,31 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   const next = () => setStep(s => Math.min(s + 1, 7) as Step);
   const back = () => setStep(s => Math.max(s - 1, 1) as Step);
 
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+
+  const phoneDigits = phone.replace(/\D/g, '');
+  const canStep1 =
+    fullName.trim().length >= 2 &&
+    username.trim().length >= 3 &&
+    /^\S+@\S+\.\S+$/.test(email.trim()) &&
+    phoneDigits.length >= 9 &&
+    phoneDigits.length <= 11;
+  const canStep2 = /^\d{6}$/.test(otp.trim());
+
+  const pickImage = (key: string, setDone: (v: boolean) => void, capture?: 'user' | 'environment') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if (capture) input.setAttribute('capture', capture);
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      setPreviews(p => ({ ...p, [key]: URL.createObjectURL(file) }));
+      setDone(true);
+    };
+    input.click();
+  };
+
   const handleEligibilityNext = () => {
     if (!isAdult) {
       setUnderageBlocked(true);
@@ -188,7 +213,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 <PhoneInput value={phone} onChange={setPhone} country={country} onCountryChange={setCountry} />
               </div>
 
-              <Button variant="primary" size="lg" fullWidth onClick={next}>
+              <Button variant="primary" size="lg" fullWidth onClick={next} disabled={!canStep1}>
                 Next
               </Button>
             </div>
@@ -215,7 +240,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
               <div className="flex gap-3">
                 <Button variant="ghost" size="lg" onClick={back}>Back</Button>
-                <Button variant="primary" size="lg" fullWidth onClick={next}>Next</Button>
+                <Button variant="primary" size="lg" fullWidth onClick={next} disabled={!canStep2}>Next</Button>
               </div>
             </div>
           )}
@@ -318,13 +343,15 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               ].map(item => (
                 <button
                   key={item.label}
-                  onClick={() => item.setDone(true)}
+                  onClick={() => pickImage(item.label, item.setDone, item.label.startsWith('Selfie') ? 'user' : undefined)}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 mb-3 transition-all ${
                     item.done ? 'border-green-500 bg-green-50' : 'border-dashed border-gray-300 hover:border-gray-400'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${item.done ? 'bg-green-600' : 'bg-gray-100'}`}>
-                    {item.done ? (
+                    {previews[item.label] ? (
+                      <img src={previews[item.label]} alt="" className="w-full h-full object-cover rounded-lg" />
+                    ) : item.done ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                         <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -429,13 +456,15 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </div>
 
               <button
-                onClick={() => setGameScreenshotUploaded(true)}
+                onClick={() => pickImage('game', setGameScreenshotUploaded)}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 mb-6 transition-all ${
                   gameScreenshotUploaded ? 'border-green-500 bg-green-50' : 'border-dashed border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${gameScreenshotUploaded ? 'bg-green-600' : 'bg-gray-100'}`}>
-                  {gameScreenshotUploaded ? (
+                  {previews['game'] ? (
+                    <img src={previews['game']} alt="" className="w-full h-full object-cover rounded-lg" />
+                  ) : gameScreenshotUploaded ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                       <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
