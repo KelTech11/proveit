@@ -602,6 +602,7 @@ function AppInner() {
       return;
     }
     setPrevScreen(screen === 'locked' ? prevScreen : screen);
+    if (s === 'join' && screen === 'dashboard') setJoinCode('');
     if (!verified && ['create-match', 'join', 'payout'].includes(s)) {
       setScreen('locked');
       return;

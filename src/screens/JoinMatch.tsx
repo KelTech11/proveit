@@ -41,32 +41,41 @@ export default function JoinMatch({
   const money = (n: number) =>
     `${profile.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  // Invite links only work for 10 minutes
+  // Only real invite links work, and only for 10 minutes
   let expired = false;
-  try {
-    const cleaned = code.trim().split('/').filter(Boolean).pop() || '';
-    const parsed = JSON.parse(atob(decodeURIComponent(cleaned)));
-    if (parsed && typeof parsed.w === 'number') {
-      expired = !parsed.t || Date.now() - Number(parsed.t) > 10 * 60 * 1000;
+  let invalid = false;
+  if (code.trim()) {
+    try {
+      const cleaned = code.trim().split('/').filter(Boolean).pop() || '';
+      const parsed = JSON.parse(atob(decodeURIComponent(cleaned)));
+      if (parsed && typeof parsed.w === 'number' && parsed.g in GAME_DETAILS) {
+        expired = !parsed.t || Date.now() - Number(parsed.t) > 10 * 60 * 1000;
+      } else {
+        invalid = true;
+      }
+    } catch {
+      invalid = true;
     }
-  } catch {}
+  }
 
-  if (expired) {
+  if (expired || invalid) {
     return (
       <div className="min-h-screen bg-[#F4F7F9] flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-5 text-3xl">⏱️</div>
+        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-5 text-3xl">{invalid ? '🔗' : '⏱️'}</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-          This link has expired
+          {invalid ? 'Invalid invite link' : 'This link has expired'}
         </h1>
         <p className="text-gray-500 text-sm max-w-sm mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Match invite links only work for 10 minutes. Ask your friend to send you a new one.
+          {invalid
+            ? "That isn't a valid ProveIt invite link. Check it and try again, or ask your friend to send it again."
+            : 'Match invite links only work for 10 minutes. Ask your friend to send you a new one.'}
         </p>
         <button
-          onClick={() => onNavigate('home')}
+          onClick={() => onNavigate(invalid ? 'back' : 'home')}
           className="px-8 py-3.5 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-sm transition-colors"
           style={{ fontFamily: 'Chakra Petch, sans-serif' }}
         >
-          Back to ProveIt
+          {invalid ? 'Try again' : 'Back to ProveIt'}
         </button>
       </div>
     );
