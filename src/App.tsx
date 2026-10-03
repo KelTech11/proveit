@@ -41,10 +41,8 @@ const isAdmin = (s: Screen) => ADMIN_SCREENS.includes(s);
 
 const CONSUMER_NAV = [
   { id: 'dashboard', label: 'Home', icon: IconGrid },
-  { id: 'create-match', label: 'Play', icon: IconGamepad },
   { id: 'leaderboard', label: 'Ranks', icon: IconTrophy },
   { id: 'notifications', label: 'Alerts', icon: IconBell },
-  { id: 'settings', label: 'Account', icon: IconSettings },
 ] as const;
 
 const ADMIN_NAV = [
@@ -327,7 +325,9 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
               + New Match
             </button>
             <div className="ml-3 pl-3 border-l border-gray-200">
-              <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+              <button onClick={() => onNavigate('settings')} aria-label="Account">
+                <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+              </button>
             </div>
           </nav>
         </header>
@@ -350,7 +350,9 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
             >
               + New Match
             </button>
-            <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+            <button onClick={() => onNavigate('settings')} aria-label="Account">
+              <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+            </button>
           </div>
         </header>
       )}
