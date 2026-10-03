@@ -20,6 +20,7 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
   const [disputeId] = useState(() => `D-${Math.random().toString(36).slice(2, 7).toUpperCase()}`);
   const [youSubmitted] = useState(true); // you only land here after uploading, so this is always true
   const [opponentSubmitted, setOpponentSubmitted] = useState(false);
+  const [outcome, setOutcome] = useState<null | 'won' | 'lost'>(null);
 
   const [secondsLeft, setSecondsLeft] = useState(REVIEW_WINDOW_SECONDS);
   useEffect(() => {
@@ -33,7 +34,16 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
     return () => clearTimeout(t);
   }, []);
 
-  const stage: DisputeStage = !opponentSubmitted ? 'evidence' : 'review';
+  // Demo-only: simulate a decision landing a bit after both sides have evidence in.
+  // In the real app this comes from the admin resolving the case, likely via a webhook/poll, not a timer.
+  useEffect(() => {
+    if (opponentSubmitted && !outcome) {
+      const t = setTimeout(() => setOutcome(Math.random() < 0.6 ? 'won' : 'lost'), 7000);
+      return () => clearTimeout(t);
+    }
+  }, [opponentSubmitted, outcome]);
+
+  const stage: DisputeStage = outcome ? 'resolved' : !opponentSubmitted ? 'evidence' : 'review';
 
   const fmtCountdown = (s: number) => {
     const d = Math.floor(s / 86400);
@@ -79,6 +89,17 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
             </div>
           </div>
         </div>
+
+        {!outcome && (
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <p className="text-xs font-semibold text-amber-900">
+              Feel free to close this page — we'll email you at the address on your account the moment a decision is made.
+            </p>
+          </div>
+        )}
 
         {/* --- STATUS TIMELINE --- */}
         <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
@@ -210,11 +231,62 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
 
         </div>
 
+        {/* --- RESOLUTION --- */}
+        {outcome === 'won' && (
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-[24px] p-8 flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-[#16A34A] text-white flex items-center justify-center shadow-lg">
+              <IconCheck size={28} />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Dispute resolved — you won</h2>
+            <p className="text-sm text-gray-600 max-w-md">
+              Our team reviewed both submissions and confirmed your result. Your winnings have been added to your balance.
+            </p>
+            <div className="mt-2 bg-white rounded-2xl px-6 py-3 border border-green-100 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Amount credited</p>
+              <p className="text-2xl font-black text-[#16A34A]" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                GHS {(draft.wager * 2 * 0.9).toFixed(2)}
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="mt-2 px-8 py-3 rounded-xl font-bold text-white bg-[#16A34A] hover:bg-[#15803d] transition-colors"
+              style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        )}
+
+        {outcome === 'lost' && (
+          <div className="bg-white border border-gray-200 rounded-[24px] p-8 flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center">
+              <IconShield size={26} />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Dispute resolved — opponent's claim upheld</h2>
+            <p className="text-sm text-gray-600 max-w-md">
+              After reviewing both submissions, our team found in favor of your opponent for this match. If you believe this was a mistake, you can appeal once within 48 hours.
+            </p>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="px-6 py-3 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                Back to Dashboard
+              </button>
+              <button className="px-6 py-3 rounded-xl font-bold text-white bg-gray-900 hover:bg-gray-800 transition-colors">
+                Appeal Decision
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* --- SUPPORT NOTE --- */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
-          <IconAlertTriangle size={14} className="text-amber-500" />
-          <span>Your escrow stays held until this dispute is resolved. No action needed from you right now.</span>
-        </div>
+        {!outcome && (
+          <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
+            <IconAlertTriangle size={14} className="text-amber-500" />
+            <span>Your escrow stays held until this dispute is resolved. No action needed from you right now.</span>
+          </div>
+        )}
 
       </div>
     </div>
