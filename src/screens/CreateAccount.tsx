@@ -452,7 +452,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </div>
 
               <div className="mb-4">
-                <Input label="In-Game UID" type="text" value={gameUid} onChange={setGameUid} placeholder="Enter your game UID" />
+                <Input label="In-Game UID" type="text" value={gameUid} onChange={v => setGameUid(selectedGame === 'codm' ? v.replace(/\D/g, '') : v)} placeholder="Enter your game UID" />
               </div>
 
               <button
@@ -492,7 +492,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   size="lg"
                   fullWidth
                   onClick={next}
-                  disabled={!gameUid || !gameScreenshotUploaded}
+                  disabled={!gameUid || !gameScreenshotUploaded || (selectedGame === 'codm' && !/^\d+$/.test(gameUid))}
                 >
                   Next
                 </Button>
