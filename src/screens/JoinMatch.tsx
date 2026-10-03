@@ -1,15 +1,26 @@
 import { useState } from 'react';
 import { Avatar } from '../components/ui';
 import { players } from '../data';
-import { GAME_DETAILS, GAME_FIELDS, calcPayout, type MatchDraft } from './CreateMatch';
+import { GAME_DETAILS, GAME_FIELDS, calcPayout, type MatchDraft, type GameType } from './CreateMatch';
 
 const host = players[1];
 
-// Demo match: no backend yet, so any code opens this match
+// Fallback only used if the link's code can't be decoded (e.g. a malformed or test link)
 const DEMO = { game: 'CODM' as const, mode: '1v1', wager: 100 };
 
 const money = (n: number) =>
   `GHS ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function decodeMatchCode(raw: string): { game: GameType; mode: string; wager: number } {
+  try {
+    const cleaned = raw.trim().split('/').filter(Boolean).pop() || '';
+    const parsed = JSON.parse(atob(decodeURIComponent(cleaned)));
+    if (parsed.g in GAME_DETAILS && typeof parsed.w === 'number' && parsed.w > 0) {
+      return { game: parsed.g, mode: parsed.m || GAME_DETAILS[parsed.g as GameType].modes.split(' / ')[0], wager: parsed.w };
+    }
+  } catch {}
+  return DEMO;
+}
 
 export default function JoinMatch({
   onNavigate,
@@ -23,10 +34,11 @@ export default function JoinMatch({
   const [uid, setUid] = useState('');
   const [name, setName] = useState('');
 
-  const shownCode = (code.trim().split('/').filter(Boolean).pop() || 'DEMO42').toUpperCase();
-  const game = GAME_DETAILS[DEMO.game];
-  const fields = GAME_FIELDS[DEMO.game];
-  const { pot, fee, winnings } = calcPayout(DEMO.wager);
+  const match = decodeMatchCode(code);
+  const shownCode = (code.trim().split('/').filter(Boolean).pop() || 'DEMO42').slice(0, 10).toUpperCase();
+  const game = GAME_DETAILS[match.game];
+  const fields = GAME_FIELDS[match.game];
+  const { pot, fee, winnings } = calcPayout(match.wager);
   const canJoin = uid.trim().length >= 6 && name.trim().length >= 2;
 
   return (
@@ -65,8 +77,8 @@ export default function JoinMatch({
           <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Match details</p>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-gray-600"><span>Game</span><span className="font-bold text-gray-900">{game.title}</span></div>
-            <div className="flex justify-between text-gray-600"><span>Mode</span><span className="font-bold text-gray-900">{DEMO.mode}</span></div>
-            <div className="flex justify-between text-gray-600"><span>Your stake</span><span className="font-bold text-gray-900">{money(DEMO.wager)}</span></div>
+            <div className="flex justify-between text-gray-600"><span>Mode</span><span className="font-bold text-gray-900">{match.mode}</span></div>
+            <div className="flex justify-between text-gray-600"><span>Your stake</span><span className="font-bold text-gray-900">{money(match.wager)}</span></div>
             <div className="flex justify-between text-gray-600 border-t border-gray-100 pt-2"><span>Total pot</span><span className="font-bold text-gray-900">{money(pot)}</span></div>
             <div className="flex justify-between text-gray-600"><span>Platform fee</span><span className="font-bold text-gray-900">- {money(fee)}</span></div>
             <div className="flex justify-between border-t border-gray-100 pt-2">
@@ -118,7 +130,7 @@ export default function JoinMatch({
           <button
             disabled={!canJoin}
             onClick={() => {
-              onJoined({ game: DEMO.game, mode: DEMO.mode, wager: DEMO.wager, uid: uid.trim(), username: name.trim() });
+              onJoined({ game: match.game, mode: match.mode, wager: match.wager, uid: uid.trim(), username: name.trim() });
               onNavigate('match-lobby');
             }}
             className={`flex-1 px-8 py-3.5 rounded-xl font-bold text-sm text-white transition-all shadow-md ${

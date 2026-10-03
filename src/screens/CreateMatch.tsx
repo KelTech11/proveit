@@ -144,7 +144,10 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
 
   const fields = selectedGame ? GAME_FIELDS[selectedGame] : null;
   const canCreate = gameUid.trim().length >= MIN_UID_LENGTH && gameName.trim().length >= 2;
-  const inviteLink = `https://proveit.gg/join/${inviteCode}`;
+  const encodedMatch = selectedGame
+    ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager })))
+    : inviteCode;
+  const inviteLink = `https://proveit-six.vercel.app/join/${encodedMatch}`;
   const inviteMessage = selectedGame
     ? `Yo! I'm challenging you to ${GAME_DETAILS[selectedGame].title} on ProveIt. ${money(wager)} each, winner takes the pot. Accept here: ${inviteLink}`
     : '';

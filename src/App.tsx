@@ -545,7 +545,18 @@ export default function App() {
     try { return !sessionStorage.getItem('proveit_splash_seen'); } catch { return true; }
   });
   const [screen, setScreen] = useState<Screen>(() => {
+    try {
+      const path = window.location.pathname;
+      if (path.startsWith('/join/')) return 'join';
+    } catch {}
     try { return (sessionStorage.getItem('proveit_screen') as Screen) || 'home'; } catch { return 'home'; }
+  });
+  const [joinCode, setJoinCode] = useState(() => {
+    try {
+      const path = window.location.pathname;
+      if (path.startsWith('/join/')) return path.replace('/join/', '');
+    } catch {}
+    return '';
   });
   const [prevScreen, setPrevScreen] = useState<Screen>('dashboard');
   const [matchDraft, setMatchDraft] = useState<MatchDraft | null>(null);
@@ -561,7 +572,6 @@ export default function App() {
     const t = setTimeout(() => setToast(null), 4500);
     return () => clearTimeout(t);
   }, [toast]);
-  const [joinCode, setJoinCode] = useState('');
 
   useEffect(() => {
     try { sessionStorage.setItem('proveit_screen', screen); } catch {}
