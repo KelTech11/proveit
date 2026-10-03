@@ -53,6 +53,7 @@ const isAdmin = (s: Screen) => ADMIN_SCREENS.includes(s);
 
 const CONSUMER_NAV = [
   { id: 'dashboard', label: 'Home', icon: IconGrid },
+  { id: 'matches', label: 'Matches', icon: IconList },
   { id: 'leaderboard', label: 'Ranks', icon: IconTrophy },
   { id: 'notifications', label: 'Alerts', icon: IconBell },
 ] as const;
