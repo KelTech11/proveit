@@ -5,6 +5,7 @@ import type { GameType } from './data';
 
 export type Profile = typeof me & {
   email: string;
+  avatar?: string;
   linkedGames: Partial<Record<GameType, string>>;
 };
 

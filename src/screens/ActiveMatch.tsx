@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Avatar, IconUpload, IconCheck, IconClock, IconAlertTriangle } from '../components/ui';
+import { IconUpload, IconCheck, IconClock, IconAlertTriangle } from '../components/ui';
+import { ProfileAvatar as Avatar } from '../avatars';
 import { me, players, matches } from '../data';
 import { GAME_DETAILS, DEFAULT_DRAFT, calcPayout, type MatchDraft } from './CreateMatch';
 

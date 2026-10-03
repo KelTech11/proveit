@@ -14,6 +14,7 @@ import {
 import { me, FLAG_EMOJI, GAME_META } from '../data';
 import type { GameType } from '../data';
 import { useProfile } from '../profile';
+import { AvatarPicker } from '../avatars';
 
 const GAMES: GameType[] = ['CODM', 'FC Mobile', 'eFootball', 'Tekken 8'];
 
@@ -126,7 +127,7 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
           className="px-4 pt-5 pb-6 flex items-center gap-4"
           style={{ background: '#111827' }}
         >
-          <Avatar name={profile.name} country={profile.country} color={profile.color} size="xl" />
+          <AvatarPicker />
           <div className="flex-1 min-w-0">
             {editing ? (
               <div className="flex flex-col gap-2">

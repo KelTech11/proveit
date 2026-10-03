@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Avatar } from '../components/ui';
+import { ProfileAvatar as Avatar } from '../avatars';
 import { me, players, matches } from '../data';
 import { GAME_DETAILS, FEE_FREE_PERIOD, calcPayout, type MatchDraft } from './CreateMatch';
 import jokerBanner from '../assets/joker_white.jpg';

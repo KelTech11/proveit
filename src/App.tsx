@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import type { Notification } from './data';
-import { Avatar, IconWallet, IconGamepad, IconBell, IconSettings, IconGrid, IconList, IconAlertTriangle, IconUser, IconShield, IconSearch, IconLogout, IconTrophy } from './components/ui';
+import { IconWallet, IconGamepad, IconBell, IconSettings, IconGrid, IconList, IconAlertTriangle, IconUser, IconShield, IconSearch, IconLogout, IconTrophy } from './components/ui';
+import { ProfileAvatar as Avatar } from './avatars';
 import logo from './assets/proveit-logo.png';
 import type { MatchDraft } from './screens/CreateMatch';
 import { ProfileProvider, useProfile } from './profile';
