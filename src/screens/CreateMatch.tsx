@@ -108,6 +108,8 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   const [gameName, setGameName] = useState('');
   const [rules, setRules] = useState('');
   const [copied, setCopied] = useState(false);
+  const [hasShared, setHasShared] = useState(false);
+  const [showShareWarning, setShowShareWarning] = useState(false);
   const [joinInput, setJoinInput] = useState('');
   const [inviteCode] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
 
@@ -168,6 +170,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
         document.body.removeChild(ta);
       }
       setCopied(true);
+      setHasShared(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore
@@ -688,6 +691,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                     href={whatsappLink}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() => setHasShared(true)}
                     className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold text-sm transition-colors"
                   >
                     Share on WhatsApp
@@ -706,9 +710,42 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                   </div>
                   <p className="text-[11px] text-gray-400 mt-2">You'll both see each other's profile in the lobby. Your wager only locks in escrow once both players press Start.</p>
 
+                  {showShareWarning && (
+                    <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                      <span className="text-xl shrink-0">⚠️</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-black text-amber-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>You haven't shared the link yet</p>
+                        <p className="text-xs text-amber-800 mt-0.5 mb-3">If your friend doesn't have the link, they can't join. Copy it or send it on WhatsApp first — or continue if you've already sent it another way.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={copyLink}
+                            className="px-4 py-2 rounded-lg bg-white border border-amber-300 text-amber-900 text-xs font-bold hover:bg-amber-100 transition-colors"
+                          >
+                            Copy Link
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (selectedGame) {
+                                onMatchCreated({ game: selectedGame, mode: activeMode, wager, uid: gameUid.trim(), username: gameName.trim() });
+                              }
+                              onNavigate('match-lobby');
+                            }}
+                            className="px-4 py-2 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-black transition-colors"
+                          >
+                            I already shared it — continue
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-6 flex justify-end">
                     <button
                       onClick={() => {
+                        if (!hasShared) {
+                          setShowShareWarning(true);
+                          return;
+                        }
                         if (selectedGame) {
                           onMatchCreated({ game: selectedGame, mode: activeMode, wager, uid: gameUid.trim(), username: gameName.trim() });
                         }
