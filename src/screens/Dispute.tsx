@@ -269,12 +269,9 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
             <div className="flex gap-3 mt-2">
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="px-6 py-3 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="px-6 py-3 rounded-xl font-bold text-white bg-gray-900 hover:bg-gray-800 transition-colors"
               >
                 Back to Dashboard
-              </button>
-              <button className="px-6 py-3 rounded-xl font-bold text-white bg-gray-900 hover:bg-gray-800 transition-colors">
-                Appeal Decision
               </button>
             </div>
           </div>
@@ -284,7 +281,7 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
         {(stage === 'evidence' || stage === 'review') && (
           <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
             <IconAlertTriangle size={14} className="text-amber-500" />
-            <span>Your escrow stays held until this dispute is resolved. No action needed from you right now.</span>
+            <span>GHS {(draft.wager * 2).toFixed(2)} is held in escrow until this dispute is resolved. No action needed from you right now.</span>
           </div>
         )}
 
