@@ -23,10 +23,10 @@ const GameIcon = ({ game }: { game: string }) => {
   );
 };
 
-export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean }) {
-  const winCount = 1; 
-  const totalPlayed = 2;
-  const winRate = 50;
+export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number } }) {
+  const winCount = stats.wins; 
+  const totalPlayed = stats.wins + stats.losses;
+  const winRate = totalPlayed ? Math.round((winCount / totalPlayed) * 100) : 0;
 
   // SVG Circumference calculation for Wallet
   const circumference = 100;
@@ -393,12 +393,13 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   </div>
                   <div className="text-center border-l border-white/10">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2.5" className="mx-auto mb-2"><path d="M12 2c0 0-4 7-4 12a4 4 0 0 0 8 0c0-5-4-12-4-12z"/></svg>
-                    <p className="text-xl font-black">1</p>
+                    <p className="text-xl font-black">{stats.streak}</p>
                     <p className="text-[9px] text-gray-400 font-bold uppercase leading-tight">Current Streak</p>
                   </div>
                   <div className="text-center border-l border-white/10">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.5" className="mx-auto mb-2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <p className="text-xl font-black">1,250</p>
+                    <p className="text-xl font-black">{stats.xp.toLocaleString('en-US')}</p>
+                    
                     <p className="text-[9px] text-gray-400 font-bold uppercase leading-tight">Total XP</p>
                   </div>
                 </div>
