@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import logo from '../assets/proveit-logo.png';
 import { Button, Input, PhoneInput } from '../components/ui';
 import { type Country } from '../data';
@@ -25,7 +25,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
   // Step 4
   const [idType, setIdType] = useState('ghana_card');
-  const [idNumber, setIdNumber] = useState('');
+  const [idNumber, setIdNumber] = useState('GHA-');
   const [idFrontUploaded, setIdFrontUploaded] = useState(false);
   const [idBackUploaded, setIdBackUploaded] = useState(false);
   const [selfieUploaded, setSelfieUploaded] = useState(false);
@@ -47,14 +47,41 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
   const [previews, setPreviews] = useState<Record<string, string>>({});
 
+  const phoneLen = country === 'GH' ? 9 : 10;
+  const dialCode = country === 'GH' ? '+233' : '+234';
   const phoneDigits = phone.replace(/\D/g, '');
+  const phoneValid =
+    phoneDigits.length === phoneLen &&
+    (country === 'GH' ? /^[25]/ : /^[789]/).test(phoneDigits);
   const canStep1 =
-    fullName.trim().length >= 2 &&
-    username.trim().length >= 3 &&
-    /^\S+@\S+\.\S+$/.test(email.trim()) &&
-    phoneDigits.length >= 9 &&
-    phoneDigits.length <= 11;
+    fullName.trim().split(/\s+/).filter(w => w.length >= 2).length >= 2 &&
+    /^[a-z][a-z0-9_]{2,19}$/.test(username) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) &&
+    phoneValid;
   const canStep2 = /^\d{6}$/.test(otp.trim());
+
+  const formatId = (type: string, raw: string) => {
+    const v = raw.toUpperCase();
+    if (type === 'ghana_card') {
+      const digits = v.replace(/^GHA/, '').replace(/\D/g, '').slice(0, 10);
+      return 'GHA-' + digits.slice(0, 9) + (digits.length > 9 ? '-' + digits[9] : '');
+    }
+    if (type === 'nin') return v.replace(/\D/g, '').slice(0, 11);
+    if (type === 'nhis') return v.replace(/\D/g, '').slice(0, 12);
+    return v.replace(/[^A-Z0-9]/g, '').slice(0, 9);
+  };
+  const idValid =
+    idType === 'ghana_card' ? /^GHA-\d{9}-\d$/.test(idNumber)
+    : idType === 'nin' ? /^\d{11}$/.test(idNumber)
+    : idType === 'nhis' ? /^\d{8,12}$/.test(idNumber)
+    : /^[A-Z0-9]{6,9}$/.test(idNumber);
+  const passwordValid = password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+
+  useEffect(() => {
+    setPhone('');
+    setIdType(country === 'GH' ? 'ghana_card' : 'nin');
+    setIdNumber(country === 'GH' ? 'GHA-' : '');
+  }, [country]);
 
   const pickImage = (key: string, setDone: (v: boolean) => void, capture?: 'user' | 'environment') => {
     const input = document.createElement('input');
@@ -168,14 +195,17 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </p>
 
               <div className="mb-4">
-                <Input label="Full Name" type="text" value={fullName} onChange={setFullName} placeholder="Enter your full name" />
+                <Input label="Full Name" type="text" value={fullName} onChange={v => setFullName(v.replace(/[^A-Za-z\u00C0-\u024F\s'.-]/g, '').replace(/\s{2,}/g, ' ').slice(0, 60))} placeholder="First and last name" />
               </div>
               <div className="mb-4">
-                <Input label="Username" type="text" value={username} onChange={setUsername} placeholder="Choose a username" />
+                <Input label="Username" type="text" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))} placeholder="Choose a username" />
+                <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Lowercase letters, numbers and underscore. 3 to 20 characters, starting with a letter.
+                </p>
               </div>
 
               <div className="mb-4">
-                <Input label="Email Address" type="email" value={email} onChange={setEmail} placeholder="Enter your email" />
+                <Input label="Email Address" type="email" value={email} onChange={v => setEmail(v.toLowerCase().replace(/\s/g, ''))} placeholder="Enter your email" />
                 <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
                   We'll send your verification result to this email once your account is reviewed
                 </p>
@@ -210,7 +240,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </div>
 
               <div className="mb-8">
-                <PhoneInput value={phone} onChange={setPhone} country={country} onCountryChange={setCountry} />
+                <PhoneInput value={phone} onChange={v => setPhone(v.replace(/\D/g, '').replace(/^0+/, '').slice(0, phoneLen))} country={country} onCountryChange={setCountry} />
               </div>
 
               <Button variant="primary" size="lg" fullWidth onClick={next} disabled={!canStep1}>
@@ -226,11 +256,11 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 Verify your phone
               </h1>
               <p className="text-gray-500 text-sm mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
-                We sent a code to {phone || 'your number'}
+                We sent a code to {phone ? `${dialCode} ${phone}` : 'your number'}
               </p>
 
               <div className="mb-4">
-                <Input label="Verification Code" type="text" value={otp} onChange={setOtp} placeholder="Enter 6-digit code" />
+                <Input label="Verification Code" type="tel" value={otp} onChange={v => setOtp(v.replace(/\D/g, '').slice(0, 6))} placeholder="Enter 6-digit code" />
               </div>
 
               <p className="text-sm text-gray-500 mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -312,7 +342,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 </label>
                 <select
                   value={idType}
-                  onChange={e => setIdType(e.target.value)}
+                  onChange={e => { setIdType(e.target.value); setIdNumber(e.target.value === 'ghana_card' ? 'GHA-' : ''); }}
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-sm font-medium focus:border-green-500 focus:outline-none"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
@@ -332,7 +362,13 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </div>
 
               <div className="mb-5">
-                <Input label="ID Number" type="text" value={idNumber} onChange={setIdNumber} placeholder="Enter your ID number" />
+                <Input
+                  label="ID Number"
+                  type="text"
+                  value={idNumber}
+                  onChange={v => setIdNumber(formatId(idType, v))}
+                  placeholder={idType === 'ghana_card' ? 'GHA-000000000-0' : idType === 'nin' ? '11-digit NIN' : 'Enter your ID number'}
+                />
               </div>
 
               {/* Upload buttons */}
@@ -380,7 +416,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   size="lg"
                   fullWidth
                   onClick={next}
-                  disabled={!idNumber || !idFrontUploaded || !selfieUploaded}
+                  disabled={!idValid || !idFrontUploaded || !selfieUploaded}
                 >
                   Next
                 </Button>
@@ -400,9 +436,12 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
               <div className="mb-4">
                 <Input label="Create Password" type="password" value={password} onChange={setPassword} placeholder="Enter a password" />
+                <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  At least 8 characters, with a letter and a number.
+                </p>
               </div>
               <div className="mb-8">
-                <Input label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="Re-enter your password" />
+                <Input label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="Re-enter your password" error={confirmPassword && password !== confirmPassword ? "Passwords don't match" : undefined} />
               </div>
 
               <div className="flex gap-3">
@@ -412,7 +451,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   size="lg"
                   fullWidth
                   onClick={next}
-                  disabled={!password || password !== confirmPassword}
+                  disabled={!passwordValid || password !== confirmPassword}
                 >
                   Next
                 </Button>
@@ -492,7 +531,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   size="lg"
                   fullWidth
                   onClick={next}
-                  disabled={!gameUid || !gameScreenshotUploaded || (selectedGame === 'codm' && !/^\d+$/.test(gameUid))}
+                  disabled={gameUid.length < 6 || !gameScreenshotUploaded || (selectedGame === 'codm' && !/^\d+$/.test(gameUid))}
                 >
                   Next
                 </Button>
@@ -516,7 +555,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   { label: 'Username', value: username || '—' },
                   { label: 'Email', value: email || '—' },
                   { label: 'Country', value: country === 'GH' ? 'Ghana' : 'Nigeria' },
-                  { label: 'Phone', value: phone || '—' },
+                  { label: 'Phone', value: phone ? `${dialCode} ${phone}` : '—' },
                   { label: 'ID Type', value: idType.replace('_', ' ').toUpperCase() },
                   { label: 'ID Number', value: idNumber || '—' },
                   { label: 'Game', value: selectedGame === 'codm' ? 'CODM' : 'FC Mobile' },
