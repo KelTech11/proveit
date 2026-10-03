@@ -47,6 +47,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
   const [previews, setPreviews] = useState<Record<string, string>>({});
 
+  const firstName = (fullName.trim().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
   const phoneLen = country === 'GH' ? 9 : 10;
   const dialCode = country === 'GH' ? '+233' : '+234';
   const phoneDigits = phone.replace(/\D/g, '');
@@ -253,10 +254,10 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
           {step === 2 && (
             <div className="animate-fade-up">
               <h1 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                Verify your phone
+                Welcome{firstName ? <>, <span className="text-green-600">{firstName}</span></> : ''} 👋
               </h1>
               <p className="text-gray-500 text-sm mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
-                We sent a code to {phone ? `${dialCode} ${phone}` : 'your number'}
+                Let's verify your phone. We sent a code to {phone ? `${dialCode} ${phone}` : 'your number'}
               </p>
 
               <div className="mb-4">
