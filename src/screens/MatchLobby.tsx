@@ -21,6 +21,16 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
   const [started, setStarted] = useState(false);
   const [oppReady, setOppReady] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [chatText, setChatText] = useState('');
+  const [chatMsgs, setChatMsgs] = useState<string[]>([]);
+  const [matchId] = useState(() => `M-${Math.floor(1000 + Math.random() * 9000)}`);
+
+  const sendChat = () => {
+    const t = chatText.trim();
+    if (!t) return;
+    setChatMsgs(m => [...m, t]);
+    setChatText('');
+  };
 
   // Demo: opponent presses Start 2s after you
   useEffect(() => {
@@ -216,7 +226,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                 <div className="flex items-center justify-center gap-1 sm:gap-4">
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                   <p className="text-[12px] sm:text-[32px] font-black text-[#16A34A] tabular tracking-tighter drop-shadow-sm whitespace-nowrap" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    <span className="hidden sm:inline">{me.currency} </span>{pot}<span className="hidden sm:inline">.00</span>
+                    <span className="hidden sm:inline">{me.currency} </span>{Number.isInteger(pot) ? pot : pot.toFixed(2)}<span className="hidden sm:inline">{Number.isInteger(pot) ? '.00' : ''}</span>
                   </p>
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                 </div>
@@ -378,12 +388,34 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                 <span className="bg-green-800 text-white text-[8px] sm:text-[10px] font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md flex items-center gap-1.5 uppercase tracking-widest">
                   <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-[#a3e635] animate-pulse" /> Live
                 </span>
-                <span className="text-gray-500 text-xs sm:text-sm font-bold">Match M-7842</span>
+                <span className="text-gray-500 text-xs sm:text-sm font-bold">Match {matchId}</span>
               </div>
               
               <div className="flex-1 max-w-sm relative hidden sm:block">
+                {chatMsgs.length > 0 && (
+                  <div className="absolute bottom-full left-0 right-0 mb-2 max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-2xl shadow-lg p-3 flex flex-col gap-1.5">
+                    {chatMsgs.map((m, i) => (
+                      <div key={i} className="self-end max-w-[85%] bg-[#16A34A] text-white text-xs font-medium px-3 py-1.5 rounded-2xl rounded-br-sm break-words">{m}</div>
+                    ))}
+                  </div>
+                )}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <input type="text" placeholder="Type a message..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-green-100 transition-all" />
+                <input
+                  type="text"
+                  value={chatText}
+                  onChange={e => setChatText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') sendChat(); }}
+                  placeholder="Type a message..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-12 pr-14 text-sm font-medium outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-green-100 transition-all"
+                />
+                <button
+                  onClick={sendChat}
+                  disabled={!chatText.trim()}
+                  aria-label="Send message"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
 
