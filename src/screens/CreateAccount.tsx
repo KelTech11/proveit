@@ -48,8 +48,9 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   // Step 7 (submitted state)
   const [submitted, setSubmitted] = useState(!!draft.submitted);
 
-  const next = () => setStep(s => Math.min(s + 1, 7) as Step);
-  const back = () => setStep(s => Math.max(s - 1, 1) as Step);
+  const [tried, setTried] = useState(false);
+  const next = () => { setTried(false); setStep(s => Math.min(s + 1, 7) as Step); };
+  const back = () => { setTried(false); setStep(s => Math.max(s - 1, 1) as Step); };
 
   const [previews, setPreviews] = useState<Record<string, string>>({});
 
@@ -75,14 +76,89 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
     }
     if (type === 'nin') return v.replace(/\D/g, '').slice(0, 11);
     if (type === 'nhis') return v.replace(/\D/g, '').slice(0, 12);
+    if (type === 'voters_id') return v.replace(/\D/g, '').slice(0, 10);
     return v.replace(/[^A-Z0-9]/g, '').slice(0, 9);
   };
   const idValid =
     idType === 'ghana_card' ? /^GHA-\d{9}-\d$/.test(idNumber)
     : idType === 'nin' ? /^\d{11}$/.test(idNumber)
+    : idType === 'voters_id' ? /^\d{10}$/.test(idNumber)
     : idType === 'nhis' ? /^\d{8,12}$/.test(idNumber)
     : /^[A-Z0-9]{6,9}$/.test(idNumber);
   const passwordValid = password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+
+  const [showPw, setShowPw] = useState(false);
+  const [resendIn, setResendIn] = useState(45);
+  const pwScore = [
+    password.length >= 8,
+    /[a-z]/.test(password) && /[A-Z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
+  const pwLabel = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'][pwScore];
+
+  useEffect(() => {
+    if (step === 2) setResendIn(45);
+  }, [step]);
+  useEffect(() => {
+    if (step !== 2 || resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [step, resendIn]);
+
+  const e1: Record<string, string> = {};
+  if (fullName.trim().split(/\s+/).filter(w => w.length >= 2).length < 2) e1.fullName = 'Enter your first and last name';
+  if (!username) e1.username = 'Choose a username';
+  else if (!/^[a-z][a-z0-9_]{2,19}$/.test(username)) e1.username = 'Use 3-20 lowercase letters, numbers or underscore, starting with a letter';
+  if (!email.trim()) e1.email = 'Enter your email address';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e1.email = 'Enter a valid email, like name@gmail.com';
+  if (!phone) e1.phone = 'Enter your phone number';
+  else if (!phoneValid) e1.phone = country === 'GH' ? 'Enter 9 digits after +233, starting with 2 or 5' : 'Enter 10 digits after +234, starting with 7, 8 or 9';
+
+  const e2: Record<string, string> = {};
+  if (!/^\d{6}$/.test(otp.trim())) e2.otp = 'Enter the 6-digit code we sent you';
+
+  const e3: Record<string, string> = {};
+  if (!agreedTerms) e3.terms = 'You need to agree to continue';
+
+  const e4: Record<string, string> = {};
+  if (!idValid) {
+    e4.idNumber =
+      idType === 'ghana_card' ? 'Enter your full Ghana Card number, like GHA-123456789-0'
+      : idType === 'nin' ? 'NIN must be 11 digits'
+      : idType === 'voters_id' ? 'Voter ID must be 10 digits'
+      : idType === 'nhis' ? 'Enter your NHIS number (8 to 12 digits)'
+      : 'Enter your passport number (6 to 9 letters or numbers)';
+  }
+  if (!idFrontUploaded) e4.front = idType === 'passport' ? 'Upload the photo page of your passport' : 'Upload the front of your ID';
+  if (idType === 'ghana_card' && !idBackUploaded) e4.back = 'Upload the back of your Ghana Card';
+  if (!selfieUploaded) e4.selfie = 'Take a selfie to continue';
+  const upErr = (label: string) => (label === 'Front of ID' ? e4.front : label === 'Back of ID' ? e4.back : e4.selfie);
+
+  const e5: Record<string, string> = {};
+  if (!passwordValid) e5.password = 'Use at least 8 characters, with a letter and a number';
+  if (!confirmPassword) e5.confirm = 'Re-enter your password';
+  else if (password !== confirmPassword) e5.confirm = "Passwords don't match";
+
+  const e6: Record<string, string> = {};
+  if (gameUid.length < 6) e6.uid = 'Enter your in-game UID (at least 6 characters)';
+  else if (selectedGame === 'codm' && !/^\d+$/.test(gameUid)) e6.uid = 'CODM UIDs are numbers only';
+  if (!gameScreenshotUploaded) e6.shot = 'Upload a screenshot of your in-game profile';
+
+  const goToFirstError = () => {
+    setTimeout(() => {
+      const el = document.querySelector('.border-red-400, .field-error') as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const target = el.matches('input, select') ? el : el.querySelector('input, select');
+      (target as HTMLElement | null)?.focus({ preventScroll: true });
+    }, 60);
+  };
+  const attempt = (errs: Record<string, string>, go: () => void) => {
+    if (Object.keys(errs).length === 0) { go(); return; }
+    setTried(true);
+    goToFirstError();
+  };
 
   const prevCountry = useRef(country);
   useEffect(() => {
@@ -211,17 +287,17 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </p>
 
               <div className="mb-4">
-                <Input label="Full Name" type="text" value={fullName} onChange={v => setFullName(v.replace(/[^A-Za-z\u00C0-\u024F\s'.-]/g, '').replace(/\s{2,}/g, ' ').slice(0, 60))} placeholder="First and last name" />
+                <Input label="Full Name" type="text" value={fullName} onChange={v => setFullName(v.replace(/[^A-Za-z\u00C0-\u024F\s'.-]/g, '').replace(/\s{2,}/g, ' ').slice(0, 60))} placeholder="First and last name" autoComplete="name" error={tried ? e1.fullName : undefined} />
               </div>
               <div className="mb-4">
-                <Input label="Username" type="text" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))} placeholder="Choose a username" />
+                <Input label="Username" type="text" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))} placeholder="Choose a username" autoComplete="username" error={tried ? e1.username : undefined} />
                 <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
                   Lowercase letters, numbers and underscore. 3 to 20 characters, starting with a letter.
                 </p>
               </div>
 
               <div className="mb-4">
-                <Input label="Email Address" type="email" value={email} onChange={v => setEmail(v.toLowerCase().replace(/\s/g, ''))} placeholder="Enter your email" />
+                <Input label="Email Address" type="email" value={email} onChange={v => setEmail(v.toLowerCase().replace(/\s/g, ''))} placeholder="Enter your email" autoComplete="email" inputMode="email" error={tried ? e1.email : undefined} />
                 <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
                   We'll send your verification result to this email once your account is reviewed
                 </p>
@@ -257,9 +333,12 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
               <div className="mb-8">
                 <PhoneInput value={phone} onChange={v => setPhone(v.replace(/\D/g, '').replace(/^0+/, '').slice(0, phoneLen))} country={country} onCountryChange={setCountry} />
+                {tried && e1.phone && (
+                  <p className="field-error text-xs text-red-500 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>{e1.phone}</p>
+                )}
               </div>
 
-              <Button variant="primary" size="lg" fullWidth onClick={next} disabled={!canStep1}>
+              <Button variant="primary" size="lg" fullWidth onClick={() => attempt(e1, next)}>
                 Next
               </Button>
             </div>
@@ -276,17 +355,21 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </p>
 
               <div className="mb-4">
-                <Input label="Verification Code" type="tel" value={otp} onChange={v => setOtp(v.replace(/\D/g, '').slice(0, 6))} placeholder="Enter 6-digit code" />
+                <Input label="Verification Code" type="tel" value={otp} onChange={v => setOtp(v.replace(/\D/g, '').slice(0, 6))} placeholder="Enter 6-digit code" autoComplete="one-time-code" inputMode="numeric" error={tried ? e2.otp : undefined} />
               </div>
 
               <p className="text-sm text-gray-500 mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Didn't get it?{' '}
-                <span className="text-green-600 font-semibold cursor-pointer hover:text-green-700">Resend code</span>
+                {resendIn > 0 ? (
+                  <span className="text-gray-400 font-semibold">Resend in 0:{String(resendIn).padStart(2, '0')}</span>
+                ) : (
+                  <button type="button" onClick={() => setResendIn(45)} className="text-green-600 font-semibold hover:text-green-700">Resend code</button>
+                )}
               </p>
 
               <div className="flex gap-3">
                 <Button variant="ghost" size="lg" onClick={back}>Back</Button>
-                <Button variant="primary" size="lg" fullWidth onClick={next} disabled={!canStep2}>Next</Button>
+                <Button variant="primary" size="lg" fullWidth onClick={() => attempt(e2, next)}>Next</Button>
               </div>
             </div>
           )}
@@ -313,7 +396,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 </span>
               </label>
 
-              <label className="flex items-start gap-3 mb-8 p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-green-300 transition-colors">
+              <label className={`flex items-start gap-3 mb-8 p-4 rounded-xl border cursor-pointer transition-colors ${tried && e3.terms ? 'border-red-400 bg-red-50 field-error' : 'border-gray-200 hover:border-green-300'}`}>
                 <input
                   type="checkbox"
                   checked={agreedTerms}
@@ -324,6 +407,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   I agree to the{' '}
                   <span className="text-green-600 underline">Terms of Service</span> and{' '}
                   <span className="text-green-600 underline">Privacy Policy</span>
+                  {tried && e3.terms && <span className="block text-xs text-red-500 mt-1">{e3.terms}</span>}
                 </span>
               </label>
 
@@ -333,8 +417,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   variant="primary"
                   size="lg"
                   fullWidth
-                  onClick={handleEligibilityNext}
-                  disabled={!agreedTerms}
+                  onClick={() => attempt(e3, handleEligibilityNext)}
                 >
                   Next
                 </Button>
@@ -358,13 +441,20 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 </label>
                 <select
                   value={idType}
-                  onChange={e => { setIdType(e.target.value); setIdNumber(e.target.value === 'ghana_card' ? 'GHA-' : ''); }}
+                  onChange={e => {
+                    setIdType(e.target.value);
+                    setIdNumber(e.target.value === 'ghana_card' ? 'GHA-' : '');
+                    setIdFrontUploaded(false);
+                    setIdBackUploaded(false);
+                    setPreviews(p => ({ ...p, 'Front of ID': '', 'Back of ID': '' }));
+                  }}
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-sm font-medium focus:border-green-500 focus:outline-none"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   {country === 'GH' ? (
                     <>
                       <option value="ghana_card">Ghana Card</option>
+                      <option value="voters_id">Voter ID</option>
                       <option value="passport">Passport</option>
                       <option value="nhis">NHIS ID</option>
                     </>
@@ -383,6 +473,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   type="text"
                   value={idNumber}
                   onChange={v => setIdNumber(formatId(idType, v))}
+                  error={tried ? e4.idNumber : undefined}
                   placeholder={idType === 'ghana_card' ? 'GHA-000000000-0' : idType === 'nin' ? '11-digit NIN' : 'Enter your ID number'}
                 />
               </div>
@@ -390,14 +481,14 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               {/* Upload buttons */}
               {[
                 { label: 'Front of ID', done: idFrontUploaded, setDone: setIdFrontUploaded },
-                { label: 'Back of ID', done: idBackUploaded, setDone: setIdBackUploaded },
+                { label: 'Back of ID', done: idBackUploaded, setDone: setIdBackUploaded, onlyFor: 'ghana_card' },
                 { label: 'Selfie (Liveness Check)', done: selfieUploaded, setDone: setSelfieUploaded },
-              ].map(item => (
+              ].filter(item => !item.onlyFor || item.onlyFor === idType).map(item => (
                 <button
                   key={item.label}
                   onClick={() => pickImage(item.label, item.setDone, item.label.startsWith('Selfie') ? 'user' : undefined)}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 mb-3 transition-all ${
-                    item.done ? 'border-green-500 bg-green-50' : 'border-dashed border-gray-300 hover:border-gray-400'
+                    item.done ? 'border-green-500 bg-green-50' : tried && upErr(item.label) ? 'border-dashed border-red-400 bg-red-50' : 'border-dashed border-gray-300 hover:border-gray-400'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${item.done ? 'bg-green-600' : 'bg-gray-100'}`}>
@@ -419,7 +510,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                       {item.label}
                     </p>
                     <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {item.done ? 'Captured' : 'Tap to open camera'}
+                      {item.done ? 'Captured' : tried && upErr(item.label) ? <span className="text-red-500 font-semibold">{upErr(item.label)}</span> : 'Tap to open camera'}
                     </p>
                   </div>
                 </button>
@@ -431,8 +522,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   variant="primary"
                   size="lg"
                   fullWidth
-                  onClick={next}
-                  disabled={!idValid || !idFrontUploaded || !selfieUploaded}
+                  onClick={() => attempt(e4, next)}
                 >
                   Next
                 </Button>
@@ -451,13 +541,41 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </p>
 
               <div className="mb-4">
-                <Input label="Create Password" type="password" value={password} onChange={setPassword} placeholder="Enter a password" />
+                <Input
+                  label="Create Password"
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="Enter a password"
+                  autoComplete="new-password"
+                  error={tried ? e5.password : undefined}
+                  suffix={<button type="button" onClick={() => setShowPw(s => !s)} className="text-xs font-semibold text-gray-500 hover:text-gray-800">{showPw ? 'Hide' : 'Show'}</button>}
+                />
+                {password && (
+                  <div className="mt-2">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwScore ? (pwScore <= 1 ? 'bg-red-500' : pwScore === 2 ? 'bg-amber-500' : pwScore === 3 ? 'bg-lime-500' : 'bg-green-600') : 'bg-gray-200'}`} />
+                      ))}
+                    </div>
+                    <p className="text-xs mt-1 text-gray-500" style={{ fontFamily: 'Inter, sans-serif' }}>{pwLabel}</p>
+                  </div>
+                )}
                 <p className="text-xs text-gray-400 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
                   At least 8 characters, with a letter and a number.
                 </p>
               </div>
               <div className="mb-8">
-                <Input label="Confirm Password" type="password" value={confirmPassword} onChange={setConfirmPassword} placeholder="Re-enter your password" error={confirmPassword && password !== confirmPassword ? "Passwords don't match" : undefined} />
+                <Input
+                  label="Confirm Password"
+                  type={showPw ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  placeholder="Re-enter your password"
+                  autoComplete="new-password"
+                  error={(tried || confirmPassword) && e5.confirm ? e5.confirm : undefined}
+                  suffix={<button type="button" onClick={() => setShowPw(s => !s)} className="text-xs font-semibold text-gray-500 hover:text-gray-800">{showPw ? 'Hide' : 'Show'}</button>}
+                />
               </div>
 
               <div className="flex gap-3">
@@ -466,8 +584,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   variant="primary"
                   size="lg"
                   fullWidth
-                  onClick={next}
-                  disabled={!passwordValid || password !== confirmPassword}
+                  onClick={() => attempt(e5, next)}
                 >
                   Next
                 </Button>
@@ -507,13 +624,13 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               </div>
 
               <div className="mb-4">
-                <Input label="In-Game UID" type="text" value={gameUid} onChange={v => setGameUid(selectedGame === 'codm' ? v.replace(/\D/g, '') : v)} placeholder="Enter your game UID" />
+                <Input label="In-Game UID" type="text" value={gameUid} onChange={v => setGameUid(selectedGame === 'codm' ? v.replace(/\D/g, '') : v)} placeholder="Enter your game UID" autoComplete="off" inputMode={selectedGame === 'codm' ? 'numeric' : 'text'} error={tried ? e6.uid : undefined} />
               </div>
 
               <button
                 onClick={() => pickImage('game', setGameScreenshotUploaded)}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 mb-6 transition-all ${
-                  gameScreenshotUploaded ? 'border-green-500 bg-green-50' : 'border-dashed border-gray-300 hover:border-gray-400'
+                  gameScreenshotUploaded ? 'border-green-500 bg-green-50' : tried && e6.shot ? 'border-dashed border-red-400 bg-red-50' : 'border-dashed border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${gameScreenshotUploaded ? 'bg-green-600' : 'bg-gray-100'}`}>
@@ -535,7 +652,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                     Username Screenshot
                   </p>
                   <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {gameScreenshotUploaded ? 'Uploaded' : 'Tap to upload'}
+                    {gameScreenshotUploaded ? 'Uploaded' : tried && e6.shot ? <span className="text-red-500 font-semibold">{e6.shot}</span> : 'Tap to upload'}
                   </p>
                 </div>
               </button>
@@ -546,8 +663,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                   variant="primary"
                   size="lg"
                   fullWidth
-                  onClick={next}
-                  disabled={gameUid.length < 6 || !gameScreenshotUploaded || (selectedGame === 'codm' && !/^\d+$/.test(gameUid))}
+                  onClick={() => attempt(e6, next)}
                 >
                   Next
                 </Button>

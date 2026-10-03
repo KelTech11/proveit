@@ -138,6 +138,9 @@ export function Input({
   prefix,
   suffix,
   className = '',
+  autoComplete,
+  inputMode,
+  name,
 }: {
   label?: string;
   type?: string;
@@ -148,6 +151,9 @@ export function Input({
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   className?: string;
+  autoComplete?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  name?: string;
 }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -163,6 +169,9 @@ export function Input({
         {prefix && <div className="pl-3 pr-2 text-gray-500 shrink-0">{prefix}</div>}
         <input
           type={type}
+          name={name}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
@@ -209,6 +218,7 @@ export function PhoneInput({
         </button>
         <input
           type="tel"
+          autoComplete="tel-national"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder="20 000 0000"
