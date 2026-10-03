@@ -9,7 +9,10 @@ const opponent = players[1];
 
 const DEFAULT_DRAFT: MatchDraft = { game: 'CODM', mode: '1v1', wager: 225, uid: '', username: '' };
 
+import { useProfile } from '../profile';
+
 export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void }) {
+  const { profile: me } = useProfile();
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
   const pot = draft.wager * 2;

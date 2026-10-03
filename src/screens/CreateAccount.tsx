@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import logo from '../assets/proveit-logo.png';
 import { Button, Input, PhoneInput } from '../components/ui';
 import { type Country } from '../data';
+import { useProfile } from '../profile';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -197,7 +198,23 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
     next();
   };
 
+  const { updateProfile } = useProfile();
+
   const handleSubmit = () => {
+    const d = phone.replace(/\D/g, '');
+    const formattedPhone = country === 'GH'
+      ? `${dialCode} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+      : `${dialCode} ${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
+    const linkedGames = selectedGame === 'codm' ? { CODM: gameUid } : { 'FC Mobile': gameUid };
+    updateProfile({
+      name: fullName.trim().replace(/\b\w/g, c => c.toUpperCase()),
+      username,
+      email: email.trim(),
+      country,
+      currency: country === 'GH' ? 'GHS' : 'NGN',
+      phone: formattedPhone,
+      linkedGames,
+    });
     setSubmitted(true);
   };
 

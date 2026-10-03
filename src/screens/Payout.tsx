@@ -32,12 +32,15 @@ const BANK_LABELS: Record<string, string> = {
   NG: 'All Nigerian banks supported',
 };
 
-const CURRENCY_LABEL = me.currency;
-const COUNTRY = me.country;
 const WITHDRAWAL_FEE = 1;
 const MIN_WITHDRAWAL = 20;
 
+import { useProfile } from '../profile';
+
 export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate: (s: string) => void; balance: number; onWithdraw: (amount: number) => void }) {
+  const { profile: me } = useProfile();
+  const CURRENCY_LABEL = me.currency;
+  const COUNTRY = me.country;
   const [method, setMethod] = useState<Method>(null);
   const [network, setNetwork] = useState<MobileNetwork>('mtn');
   const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, ''));

@@ -22,6 +22,8 @@ function decodeMatchCode(raw: string): { game: GameType; mode: string; wager: nu
   return DEMO;
 }
 
+import { useProfile } from '../profile';
+
 export default function JoinMatch({
   onNavigate,
   code,
@@ -31,10 +33,10 @@ export default function JoinMatch({
   code: string;
   onJoined: (d: MatchDraft) => void;
 }) {
-  const [uid, setUid] = useState('');
-  const [name, setName] = useState('');
-
+  const { profile } = useProfile();
   const match = decodeMatchCode(code);
+  const [uid, setUid] = useState(profile.linkedGames[match.game] ?? '');
+  const [name, setName] = useState('');
   const shownCode = (code.trim().split('/').filter(Boolean).pop() || 'DEMO42').slice(0, 10).toUpperCase();
   const game = GAME_DETAILS[match.game];
   const fields = GAME_FIELDS[match.game];

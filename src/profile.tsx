@@ -11,10 +11,10 @@ export type Profile = typeof me & {
 const DEFAULT_PROFILE: Profile = {
   ...me,
   email: 'kwame@gmail.com',
-  linkedGames: { CODM: 'KwameGOAT_GH', 'FC Mobile': 'KwameFCM' },
+  linkedGames: { CODM: '6612048837', 'FC Mobile': '2284519073' },
 };
 
-const KEY = 'proveit_profile';
+const KEY = 'proveit_profile_v2';
 
 function load(): Profile {
   try {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { me } from '../data';
+import { useProfile } from '../profile';
 
 // 1. IMPORTING YOUR EXACT LOCAL IMAGES
 import fcMobileCover from '../assets/fc-mobile.jpg';
@@ -112,6 +112,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   const [showShareWarning, setShowShareWarning] = useState(false);
   const [joinInput, setJoinInput] = useState('');
   const [inviteCode] = useState(() => Math.random().toString(36).slice(2, 8).toUpperCase());
+  const { profile } = useProfile();
 
   useEffect(() => {
     const t = setTimeout(() => setHeroIndex(i => (i + 1) % HERO_SLIDES.length), 4000);
@@ -119,7 +120,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   }, [heroIndex]);
 
   useEffect(() => {
-    setGameUid('');
+    setGameUid(selectedGame ? profile.linkedGames[selectedGame] ?? '' : '');
     setGameName('');
   }, [selectedGame]);
 

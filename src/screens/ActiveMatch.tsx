@@ -9,7 +9,10 @@ const MATCH_WINDOW_SECONDS = 20 * 60; // 20 min soft window — purely informati
 
 type Claim = null | 'won' | 'lost';
 
+import { useProfile } from '../profile';
+
 export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, onLose }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onWin: (amount: number) => void; onNotify: (type: 'match_invite' | 'dispute_alert', title: string, body: string) => void; onLose: () => void }) {
+  const { profile: me } = useProfile();
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const gameMeta = GAME_DETAILS[draft.game];
   const { winnings } = calcPayout(draft.wager);

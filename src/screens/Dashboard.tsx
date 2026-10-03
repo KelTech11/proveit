@@ -23,7 +23,10 @@ const GameIcon = ({ game }: { game: string }) => {
   );
 };
 
+import { useProfile } from '../profile';
+
 export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number } }) {
+  const { profile: me } = useProfile();
   const winCount = stats.wins; 
   const totalPlayed = stats.wins + stats.losses;
   const winRate = totalPlayed ? Math.round((winCount / totalPlayed) * 100) : 0;
@@ -252,11 +255,11 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <div className="space-y-4">
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Username</p>
-                      <p className="text-sm font-black text-gray-900">{me.name}</p>
+                      <p className="text-sm font-black text-gray-900">{me.username}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Region</p>
-                      <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5"><span className="text-base leading-none border border-gray-100 rounded-sm">🇬🇭</span> GH</p>
+                      <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5"><span className="text-base leading-none border border-gray-100 rounded-sm">{me.country === 'GH' ? '🇬🇭' : '🇳🇬'}</span> {me.country}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</p>

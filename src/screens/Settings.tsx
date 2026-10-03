@@ -73,6 +73,8 @@ function SettingRow({
 
 export default function Settings({ onNavigate }: { onNavigate: (s: string) => void }) {
   const { profile, updateProfile } = useProfile();
+  const me = profile;
+  const GAMES: GameType[] = ['CODM', 'FC Mobile', 'eFootball', 'Free Fire', 'PUBG Mobile'];
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState(profile.name);
   const [usernameDraft, setUsernameDraft] = useState(profile.username);
@@ -268,10 +270,10 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
           <Card className="overflow-hidden divide-y divide-gray-100">
             <SettingRow
               label="Phone"
-              value={me.phone.replace(/(\+\d+\s\d+\s)\d+(\s\d+)/, '$1***$2')}
+              value={profile.phone.replace(/(\+\d+\s\d+\s)\d+(\s\d+)/, '$1***$2')}
             />
-            <SettingRow label="Email" value="kwame@gmail.com" />
-            <SettingRow label="Region" value={`Ghana ${FLAG_EMOJI['GH']}`} />
+            <SettingRow label="Email" value={profile.email} />
+            <SettingRow label="Region" value={`${profile.country === 'GH' ? 'Ghana' : 'Nigeria'} ${FLAG_EMOJI[profile.country]}`} />
             <SettingRow label="Language" value="English" />
           </Card>
         </div>
@@ -324,7 +326,7 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
                       <input
                         value={linkDraft}
                         onChange={e => setLinkDraft(e.target.value)}
-                        placeholder="Username"
+                        placeholder="Game UID"
                         className="w-28 text-base border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-green-500"
                         style={{ fontFamily: 'Inter, sans-serif' }}
                       />
