@@ -238,8 +238,8 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
         <p className="text-gray-500 text-sm max-w-sm mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
           ProveIt is only available to users aged 18 and above. You cannot create an account at this time.
         </p>
-        <Button variant="ghost" size="lg" onClick={() => onNavigate('home')}>
-          Back to Home
+        <Button variant="primary" size="lg" onClick={() => { setUnderageBlocked(false); setStep(3); }}>
+          Go back
         </Button>
       </div>
     );
