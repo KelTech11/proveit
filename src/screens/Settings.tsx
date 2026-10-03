@@ -129,62 +129,22 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
         >
           <AvatarPicker />
           <div className="flex-1 min-w-0">
-            {editing ? (
-              <div className="flex flex-col gap-2">
-                <input
-                  value={nameDraft}
-                  onChange={e => setNameDraft(e.target.value)}
-                  placeholder="Full name"
-                  className="w-full text-base rounded-lg px-3 py-2 bg-white/10 text-white placeholder-gray-400 outline-none border border-white/20 focus:border-green-500"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                />
-                <input
-                  value={usernameDraft}
-                  onChange={e => setUsernameDraft(e.target.value)}
-                  placeholder="Username"
-                  className="w-full text-base rounded-lg px-3 py-2 bg-white/10 text-white placeholder-gray-400 outline-none border border-white/20 focus:border-green-500"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                />
-              </div>
-            ) : (
-              <>
-                <p
-                  className="text-xl font-bold text-white truncate"
-                  style={{ fontFamily: 'Chakra Petch, sans-serif' }}
-                >
-                  {profile.name}
-                </p>
-                <p className="text-sm text-gray-400 truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  @{profile.username}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="verified">
-                    <IconCheck size={10} />
-                    Verified
-                  </Badge>
-                </div>
-              </>
-            )}
-          </div>
-          {editing ? (
-            <div className="flex flex-col gap-2 shrink-0">
-              <Button variant="primary" size="sm" onClick={saveProfile}>
-                Save
-              </Button>
-              <Button variant="ghost" size="sm" className="border-white/20 text-white hover:bg-white/10" onClick={() => setEditing(false)}>
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="border-white/20 text-white hover:bg-white/10 shrink-0"
-              onClick={() => { setNameDraft(profile.name); setUsernameDraft(profile.username); setEditing(true); }}
+            <p
+              className="text-xl font-bold text-white truncate"
+              style={{ fontFamily: 'Chakra Petch, sans-serif' }}
             >
-              Edit
-            </Button>
-          )}
+              {profile.name}
+            </p>
+            <p className="text-sm text-gray-400 truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
+              @{profile.username}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="verified">
+                <IconCheck size={10} />
+                Verified
+              </Badge>
+            </div>
+          </div>
         </div>
 
         {/* KYC Tier Progress */}
