@@ -1,9 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { me } from './data';
 import type { Notification } from './data';
 import { Avatar, IconWallet, IconGamepad, IconBell, IconSettings, IconGrid, IconList, IconAlertTriangle, IconUser, IconShield, IconSearch, IconLogout, IconTrophy } from './components/ui';
 import logo from './assets/proveit-logo.png';
 import type { MatchDraft } from './screens/CreateMatch';
+import { ProfileProvider, useProfile } from './profile';
 
 // Consumer screens
 const Home = lazy(() => import('./screens/Home'));
@@ -287,6 +287,7 @@ function DemoNav({ current, onChange, verified, onToggleVerified }: { current: S
 
 function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive, stats }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void; stats: { wins: number; losses: number; streak: number; xp: number } }) {
   const isLobby = screen === 'match-lobby';
+  const { profile } = useProfile();
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: isLobby ? '#050a05' : '#FAFAFA' }}>
@@ -326,7 +327,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
             </button>
             <div className="ml-3 pl-3 border-l border-gray-200">
               <button onClick={() => onNavigate('settings')} aria-label="Account">
-                <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+                <Avatar name={profile.name} country={profile.country} color={profile.color} size="sm" />
               </button>
             </div>
           </nav>
@@ -351,7 +352,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
               + New Match
             </button>
             <button onClick={() => onNavigate('settings')} aria-label="Account">
-              <Avatar name={me.name} country={me.country} color={me.color} size="sm" />
+              <Avatar name={profile.name} country={profile.country} color={profile.color} size="sm" />
             </button>
           </div>
         </header>
@@ -540,7 +541,7 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
   );
 }
 
-export default function App() {
+function AppInner() {
   const [showSplash, setShowSplash] = useState(() => {
     try { return !sessionStorage.getItem('proveit_splash_seen'); } catch { return true; }
   });
@@ -656,5 +657,13 @@ export default function App() {
         }}
       />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <ProfileProvider>
+      <AppInner />
+    </ProfileProvider>
   );
 }

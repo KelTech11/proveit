@@ -13,19 +13,9 @@ import {
 } from '../components/ui';
 import { me, FLAG_EMOJI, GAME_META } from '../data';
 import type { GameType } from '../data';
+import { useProfile } from '../profile';
 
-interface LinkedGame {
-  game: GameType;
-  linked: boolean;
-  username?: string;
-}
-
-const LINKED_GAMES: LinkedGame[] = [
-  { game: 'CODM', linked: true, username: 'KwameGOAT_GH' },
-  { game: 'FC Mobile', linked: true, username: 'KwameFCM' },
-  { game: 'eFootball', linked: false },
-  { game: 'Tekken 8', linked: false },
-];
+const GAMES: GameType[] = ['CODM', 'FC Mobile', 'eFootball', 'Tekken 8'];
 
 type NotifKey = 'matchInvites' | 'payoutAlerts' | 'disputeUpdates' | 'marketing';
 
@@ -82,6 +72,12 @@ function SettingRow({
 }
 
 export default function Settings({ onNavigate }: { onNavigate: (s: string) => void }) {
+  const { profile, updateProfile } = useProfile();
+  const [editing, setEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState(profile.name);
+  const [usernameDraft, setUsernameDraft] = useState(profile.username);
+  const [linking, setLinking] = useState<GameType | null>(null);
+  const [linkDraft, setLinkDraft] = useState('');
   const [twoFA, setTwoFA] = useState(true);
   const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>({
     matchInvites: true,
@@ -92,6 +88,22 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
 
   function setNotif(key: NotifKey, val: boolean) {
     setNotifs(prev => ({ ...prev, [key]: val }));
+  }
+
+  function saveProfile() {
+    const name = nameDraft.trim();
+    const username = usernameDraft.trim().replace(/^@/, '');
+    if (!name || !username) return;
+    updateProfile({ name, username });
+    setEditing(false);
+  }
+
+  function saveLink(game: GameType) {
+    const username = linkDraft.trim();
+    if (!username) return;
+    updateProfile({ linkedGames: { ...profile.linkedGames, [game]: username } });
+    setLinking(null);
+    setLinkDraft('');
   }
 
   return (
@@ -112,27 +124,64 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
           className="px-4 pt-5 pb-6 flex items-center gap-4"
           style={{ background: '#111827' }}
         >
-          <Avatar name={me.name} country={me.country} color={me.color} size="xl" />
+          <Avatar name={profile.name} country={profile.country} color={profile.color} size="xl" />
           <div className="flex-1 min-w-0">
-            <p
-              className="text-xl font-bold text-white truncate"
-              style={{ fontFamily: 'Chakra Petch, sans-serif' }}
-            >
-              {me.name}
-            </p>
-            <p className="text-sm text-gray-400 truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
-              @{me.username}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="verified">
-                <IconCheck size={10} />
-                Verified
-              </Badge>
-            </div>
+            {editing ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  value={nameDraft}
+                  onChange={e => setNameDraft(e.target.value)}
+                  placeholder="Full name"
+                  className="w-full text-base rounded-lg px-3 py-2 bg-white/10 text-white placeholder-gray-400 outline-none border border-white/20 focus:border-green-500"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+                <input
+                  value={usernameDraft}
+                  onChange={e => setUsernameDraft(e.target.value)}
+                  placeholder="Username"
+                  className="w-full text-base rounded-lg px-3 py-2 bg-white/10 text-white placeholder-gray-400 outline-none border border-white/20 focus:border-green-500"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </div>
+            ) : (
+              <>
+                <p
+                  className="text-xl font-bold text-white truncate"
+                  style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+                >
+                  {profile.name}
+                </p>
+                <p className="text-sm text-gray-400 truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  @{profile.username}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="verified">
+                    <IconCheck size={10} />
+                    Verified
+                  </Badge>
+                </div>
+              </>
+            )}
           </div>
-          <Button variant="ghost" size="sm" className="border-white/20 text-white hover:bg-white/10 shrink-0">
-            Edit
-          </Button>
+          {editing ? (
+            <div className="flex flex-col gap-2 shrink-0">
+              <Button variant="primary" size="sm" onClick={saveProfile}>
+                Save
+              </Button>
+              <Button variant="ghost" size="sm" className="border-white/20 text-white hover:bg-white/10" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10 shrink-0"
+              onClick={() => { setNameDraft(profile.name); setUsernameDraft(profile.username); setEditing(true); }}
+            >
+              Edit
+            </Button>
+          )}
         </div>
 
         {/* KYC Tier Progress */}
@@ -233,8 +282,10 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
             Linked Games
           </p>
           <Card className="overflow-hidden divide-y divide-gray-100">
-            {LINKED_GAMES.map(({ game, linked, username }) => {
+            {GAMES.map(game => {
               const meta = GAME_META[game];
+              const username = profile.linkedGames[game];
+              const linked = !!username;
               return (
                 <div
                   key={game}
@@ -268,8 +319,21 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
                       <IconCheck size={10} />
                       Linked
                     </span>
+                  ) : linking === game ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={linkDraft}
+                        onChange={e => setLinkDraft(e.target.value)}
+                        placeholder="Username"
+                        className="w-28 text-base border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-green-500"
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                      />
+                      <Button variant="primary" size="sm" onClick={() => saveLink(game)}>
+                        Save
+                      </Button>
+                    </div>
                   ) : (
-                    <Button variant="ghost" size="sm" onClick={() => {}}>
+                    <Button variant="ghost" size="sm" onClick={() => { setLinking(game); setLinkDraft(''); }}>
                       <IconLink size={14} />
                       Link Account
                     </Button>
