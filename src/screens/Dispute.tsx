@@ -38,7 +38,7 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
   // In the real app this comes from the admin resolving the case, likely via a webhook/poll, not a timer.
   useEffect(() => {
     if (opponentSubmitted && !outcome) {
-      const t = setTimeout(() => setOutcome(Math.random() < 0.6 ? 'won' : 'lost'), 7000);
+      const t = setTimeout(() => setOutcome(Math.random() < 0.6 ? 'won' : 'lost'), 15000);
       return () => clearTimeout(t);
     }
   }, [opponentSubmitted, outcome]);
@@ -90,7 +90,7 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
           </div>
         </div>
 
-        {!outcome && (
+        {(stage === 'evidence' || stage === 'review') && (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -281,7 +281,7 @@ export default function Dispute({ onNavigate, matchDraft }: { onNavigate: (s: st
         )}
 
         {/* --- SUPPORT NOTE --- */}
-        {!outcome && (
+        {(stage === 'evidence' || stage === 'review') && (
           <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
             <IconAlertTriangle size={14} className="text-amber-500" />
             <span>Your escrow stays held until this dispute is resolved. No action needed from you right now.</span>
