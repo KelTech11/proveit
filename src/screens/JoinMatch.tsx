@@ -43,7 +43,7 @@ export default function JoinMatch({
 
   // Only real invite links work, and only for 10 minutes
   let expired = false;
-  let invalid = false;
+  let invalid = !code.trim();
   if (code.trim()) {
     try {
       const cleaned = code.trim().split('/').filter(Boolean).pop() || '';

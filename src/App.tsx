@@ -551,7 +551,10 @@ function AppInner() {
       const path = window.location.pathname;
       if (path.startsWith('/join/')) return 'join';
     } catch {}
-    try { return (sessionStorage.getItem('proveit_screen') as Screen) || 'home'; } catch { return 'home'; }
+    try {
+      const saved = (sessionStorage.getItem('proveit_screen') as Screen) || 'home';
+      return saved === 'join' ? 'create-match' : saved;
+    } catch { return 'home'; }
   });
   const [joinCode, setJoinCode] = useState(() => {
     try {
@@ -602,7 +605,7 @@ function AppInner() {
       return;
     }
     setPrevScreen(screen === 'locked' ? prevScreen : screen);
-    if (s === 'join' && screen === 'dashboard') setJoinCode('');
+    if (s === 'join' && screen === 'dashboard') { setScreen('create-match'); return; }
     if (!verified && ['create-match', 'join', 'payout'].includes(s)) {
       setScreen('locked');
       return;
