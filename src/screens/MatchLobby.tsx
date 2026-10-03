@@ -150,7 +150,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                     <p className="text-[#3B82F6] text-xs sm:text-sm font-semibold mb-1 truncate w-full hidden sm:block">@{me.username}</p>
                     <p className="text-gray-500 text-xs flex items-center gap-1.5 font-medium hidden sm:flex">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      Ghana
+                      {me.country === 'GH' ? 'Ghana' : 'Nigeria'}
                     </p>
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                 <div className="flex items-center justify-center gap-1 sm:gap-4">
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                   <p className="text-[12px] sm:text-[32px] font-black text-[#16A34A] tabular tracking-tighter drop-shadow-sm whitespace-nowrap" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    <span className="hidden sm:inline">GHS </span>{pot}<span className="hidden sm:inline">.00</span>
+                    <span className="hidden sm:inline">{me.currency} </span>{pot}<span className="hidden sm:inline">.00</span>
                   </p>
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                 </div>
@@ -356,10 +356,10 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                     ? 'Funds locked in escrow. Starting match...'
                     : started
                       ? 'Waiting for opponent to press Start...'
-                      : `GHS ${draft.wager.toFixed(2)} locks in escrow once both players press Start`}
+                      : `${me.currency} ${draft.wager.toFixed(2)} locks in escrow once both players press Start`}
                 </p>
                 <p className="text-[11px] sm:text-xs text-gray-600">
-                  Winner receives GHS {winnings.toFixed(2)}. {FEE_FREE_PERIOD ? 'Platform fee waived, your first 7 days are fee-free.' : '10% platform fee applies.'} No cancelling once funds are locked.
+                  Winner receives {me.currency} {winnings.toFixed(2)}. {FEE_FREE_PERIOD ? 'Platform fee waived, your first 7 days are fee-free.' : '10% platform fee applies.'} No cancelling once funds are locked.
                 </p>
               </div>
             </div>

@@ -17,7 +17,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const gameMeta = GAME_DETAILS[draft.game];
   const { winnings } = calcPayout(draft.wager);
-  const money = (n: number) => `GHS ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const money = (n: number) => `${me.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const MIN_SHOTS = 2;
   const MAX_SHOTS = 2;
   const [shots, setShots] = useState<{ file: File; url: string }[]>([]);
@@ -134,7 +134,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                   </div>
                   <h3 className="font-bold text-sm truncate w-full" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>You</h3>
                   <div className="flex items-center gap-1 text-[11px] text-purple-300 mt-1 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-800/50">
-                    Ghana
+                    {me.country === 'GH' ? 'Ghana' : 'Nigeria'}
                   </div>
                   <p className="text-[10px] text-gray-400 font-mono mt-1.5">UID: {draft.uid || '—'}</p>
                 </div>

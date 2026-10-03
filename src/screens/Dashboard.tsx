@@ -113,7 +113,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <span className="text-xl">🛡️</span>
                   <div>
                     <p className="text-sm font-black text-red-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Dispute under review</p>
-                    <p className="text-xs text-red-800 mt-0.5">GHS {locked.toFixed(2)} is locked until a decision is made. You'll get an email the moment it's resolved.</p>
+                    <p className="text-xs text-red-800 mt-0.5">{me.currency} {locked.toFixed(2)} is locked until a decision is made. You'll get an email the moment it's resolved.</p>
                   </div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-400 shrink-0"><path d="M9 18l6-6-6-6"/></svg>
@@ -171,18 +171,18 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                       <span className="text-[11px] font-bold text-gray-400 tracking-wider uppercase">Available Balance</span>
                     </div>
                     <span className="text-[9px] font-black bg-[#16A34A] text-white px-2 py-1 rounded uppercase tracking-widest shadow-sm">
-                      GHS Wallet
+                      {me.currency} Wallet
                     </span>
                   </div>
                   
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-black tracking-tighter" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{Math.floor(balance).toLocaleString('en-US')}<span className="text-xl text-gray-400">.{balance.toFixed(2).split('.')[1]}</span></span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">GHS</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{me.currency}</span>
                     </div>
                     <div className="inline-flex items-center gap-1.5 mt-2 bg-white/5 border border-white/10 px-2.5 py-1 rounded text-[10px] text-gray-400 font-semibold">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                      GHS {locked.toFixed(2)} locked in escrow
+                      {me.currency} {locked.toFixed(2)} locked in escrow
                     </div>
                   </div>
                 </div>

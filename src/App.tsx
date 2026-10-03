@@ -585,8 +585,9 @@ function AppInner() {
     } catch {}
   }, [screen]);
 
+  const { profile } = useProfile();
   const addNotif = (type: Notification['type'], title: string, body: string) => {
-    const n = { id: `n-${Date.now()}`, type, title, body, time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
+    const n = { id: `n-${Date.now()}`, type, title, body: body.replace(/GHS/g, profile.currency), time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
     setNotifs(prev => [n, ...prev]);
     setToast(n);
   };
