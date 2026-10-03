@@ -45,16 +45,16 @@ export default function MatchHistory({
         </div>
 
         {/* Stats strip */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           {[
             { label: 'Played', val: played.toString() },
             { label: 'Win Rate', val: `${winRate}%` },
             { label: 'Streak', val: stats.streak.toString() },
             { label: 'Net', val: `${netAmount >= 0 ? '+' : ''}${money(netAmount)}` },
           ].map(s => (
-            <div key={s.label} className="bg-white border border-gray-100 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-3 text-center shadow-sm">
+            <div key={s.label} className="bg-white border border-gray-100 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-3 text-center shadow-sm overflow-hidden">
               <p
-                className={`text-sm sm:text-lg font-black truncate ${s.label === 'Net' ? (netAmount >= 0 ? 'text-[#16A34A]' : 'text-red-500') : 'text-gray-900'}`}
+                className={`text-xs sm:text-lg font-black truncate ${s.label === 'Net' ? (netAmount >= 0 ? 'text-[#16A34A]' : 'text-red-500') : 'text-gray-900'}`}
                 style={{ fontFamily: 'Chakra Petch, sans-serif' }}
               >
                 {s.val}
