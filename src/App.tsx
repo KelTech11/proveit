@@ -575,6 +575,11 @@ export default function App() {
 
   useEffect(() => {
     try { sessionStorage.setItem('proveit_screen', screen); } catch {}
+    try {
+      if (screen !== 'join' && window.location.pathname.startsWith('/join/')) {
+        window.history.replaceState(null, '', '/');
+      }
+    } catch {}
   }, [screen]);
 
   const addNotif = (type: Notification['type'], title: string, body: string) => {
