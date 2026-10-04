@@ -25,13 +25,14 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
   const [chatMsgs, setChatMsgs] = useState<string[]>([]);
   const [matchId] = useState(() => `M-${Math.floor(1000 + Math.random() * 9000)}`);
   const [ping, setPing] = useState<number | null>(null);
+  const PING_OFFSET = 30; // site ping runs ~30 ms higher than in-game ping
 
   useEffect(() => {
     let cancelled = false;
     const measure = () => {
       const t0 = performance.now();
       fetch('/', { method: 'HEAD', cache: 'no-store' })
-        .then(() => { if (!cancelled) setPing(Math.round(performance.now() - t0)); })
+        .then(() => { if (!cancelled) setPing(Math.max(10, Math.round(performance.now() - t0) - PING_OFFSET)); })
         .catch(() => { if (!cancelled) setPing(null); });
     };
     measure();
