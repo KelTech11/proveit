@@ -1,4 +1,6 @@
-const KEY = 'proveit_account';
+﻿const ACCOUNTS_KEY = 'proveit_accounts';
+const LEGACY_KEY = 'proveit_account';
+const CURRENT_KEY = 'proveit_current';
 
 export type Account = { username: string; email: string; phone: string; hash: string };
 
@@ -24,45 +26,87 @@ const hashPassword = async (username: string, password: string) => {
   return fallbackHash(text);
 };
 
-export const loadAccount = (): Account | null => {
+const readAccounts = (): Record<string, Account> => {
   try {
-    const a = JSON.parse(localStorage.getItem(KEY) || 'null');
-    return a && a.username && a.hash ? a : null;
+    const saved = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || 'null');
+    if (saved && typeof saved === 'object') return saved;
+    // One-time move from the old single-account storage
+    const old = JSON.parse(localStorage.getItem(LEGACY_KEY) || 'null');
+    if (old && old.username && old.hash) {
+      const map: Record<string, Account> = { [old.username]: old };
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(map));
+      if (!localStorage.getItem(CURRENT_KEY)) localStorage.setItem(CURRENT_KEY, old.username);
+      return map;
+    }
+  } catch {}
+  return {};
+};
+
+const writeAccounts = (map: Record<string, Account>) => {
+  try {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(map));
+  } catch {}
+};
+
+export const setCurrentUser = (username: string) => {
+  try {
+    localStorage.setItem(CURRENT_KEY, username);
+  } catch {}
+};
+
+export const currentUser = (): string => {
+  try {
+    return localStorage.getItem(CURRENT_KEY) || '';
   } catch {
-    return null;
+    return '';
   }
+};
+
+export const loadAccount = (): Account | null => {
+  const map = readAccounts();
+  return map[currentUser()] ?? Object.values(map)[0] ?? null;
 };
 
 export const saveAccount = async (data: { username: string; email: string; phone: string; password: string }) => {
   const hash = await hashPassword(data.username, data.password);
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ username: data.username, email: data.email, phone: data.phone, hash }));
-  } catch {}
+  const map = readAccounts();
+  map[data.username] = { username: data.username, email: data.email, phone: data.phone, hash };
+  writeAccounts(map);
+  setCurrentUser(data.username);
 };
 
 export const checkLogin = async (username: string, password: string): Promise<'ok' | 'no-account' | 'wrong'> => {
-  const a = loadAccount();
-  if (!a) return 'no-account';
-  if (a.username !== username) return 'wrong';
-  return (await hashPassword(username, password)) === a.hash ? 'ok' : 'wrong';
+  const map = readAccounts();
+  if (Object.keys(map).length === 0) return 'no-account';
+  const a = map[username];
+  if (!a) return 'wrong';
+  if ((await hashPassword(username, password)) !== a.hash) return 'wrong';
+  setCurrentUser(username);
+  return 'ok';
 };
 
 // For the Forgot Password flow
+let resetTarget = '';
+
 export const findAccountByContact = (identifier: string): Account | null => {
-  const a = loadAccount();
-  if (!a) return null;
   const v = identifier.trim().toLowerCase();
-  if (v.includes('@')) return a.email.toLowerCase() === v ? a : null;
   const digits = v.replace(/\D/g, '');
-  const mine = a.phone.replace(/\D/g, '');
-  return digits.length >= 9 && mine.endsWith(digits.slice(-9)) ? a : null;
+  for (const a of Object.values(readAccounts())) {
+    const match = v.includes('@')
+      ? a.email.toLowerCase() === v
+      : digits.length >= 9 && a.phone.replace(/\D/g, '').endsWith(digits.slice(-9));
+    if (match) {
+      resetTarget = a.username;
+      return a;
+    }
+  }
+  return null;
 };
 
 export const setNewPassword = async (newPassword: string) => {
-  const a = loadAccount();
+  const map = readAccounts();
+  const a = map[resetTarget] ?? map[currentUser()];
   if (!a) return;
   a.hash = await hashPassword(a.username, newPassword);
-  try {
-    localStorage.setItem(KEY, JSON.stringify(a));
-  } catch {}
+  writeAccounts(map);
 };

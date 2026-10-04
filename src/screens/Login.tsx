@@ -24,7 +24,15 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
       setLoginError('');
       const result = await checkLogin(username, password);
       setBusy(false);
-      if (result === 'ok') { onNavigate('dashboard'); return; }
+      if (result === 'ok') {
+        // Restart on the dashboard so this account's saved profile loads
+        try {
+          sessionStorage.setItem('proveit_screen', 'dashboard');
+          localStorage.setItem('proveit_signed_in', '1');
+        } catch {}
+        window.location.reload();
+        return;
+      }
       setLoginError(
         result === 'no-account'
           ? 'No account found on this device. Tap Create Account to make one.'

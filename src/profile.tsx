@@ -15,11 +15,13 @@ const DEFAULT_PROFILE: Profile = {
   linkedGames: { CODM: '6612048837', 'FC Mobile': '2284519073' },
 };
 
-const KEY = 'proveit_profile_v2';
+const LEGACY_KEY = 'proveit_profile_v2';
+// Each account keeps its own saved profile
+const profileKey = () => `proveit_profile_v3:${localStorage.getItem('proveit_current') || ''}`;
 
 function load(): Profile {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(profileKey()) ?? localStorage.getItem(LEGACY_KEY);
     if (raw) return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
   } catch {}
   return DEFAULT_PROFILE;
@@ -33,7 +35,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile>(load);
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(profile)); } catch {}
+    try { localStorage.setItem(profileKey(), JSON.stringify(profile)); } catch {}
   }, [profile]);
 
   const updateProfile = (patch: Partial<Profile>) =>

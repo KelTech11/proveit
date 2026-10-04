@@ -216,6 +216,8 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
       ? `${dialCode} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
       : `${dialCode} ${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
     const linkedGames = selectedGame === 'codm' ? { CODM: gameUid } : { 'FC Mobile': gameUid };
+    // Save the account first so the new profile is stored under the new username
+    await saveAccount({ username, email: email.trim(), phone: formattedPhone, password });
     updateProfile({
       name: fullName.trim().replace(/\b\w/g, c => c.toUpperCase()),
       username,
@@ -224,8 +226,8 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
       currency: country === 'GH' ? 'GHS' : 'NGN',
       phone: formattedPhone,
       linkedGames,
+      avatar: undefined,
     });
-    await saveAccount({ username, email: email.trim(), phone: formattedPhone, password });
     setSubmitted(true);
   };
 
