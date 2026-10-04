@@ -25,7 +25,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
   const [chatMsgs, setChatMsgs] = useState<string[]>([]);
   const [matchId] = useState(() => `M-${Math.floor(1000 + Math.random() * 9000)}`);
   const [ping, setPing] = useState<number | null>(null);
-  const PING_OFFSET = 30; // site ping runs ~30 ms higher than in-game ping
+  const PING_OFFSET = 65; // site ping runs ~65 ms higher than in-game ping
 
   useEffect(() => {
     let cancelled = false;
