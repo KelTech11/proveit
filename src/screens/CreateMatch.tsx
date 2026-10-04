@@ -428,7 +428,28 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
 
               </div>
 
-              <div className="mt-8 bg-green-50 border border-green-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
+              <div className="mt-8 relative overflow-hidden bg-[#0B0B0F] border border-gray-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
+                <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#16A34A] rounded-full blur-3xl opacity-30 pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[#16A34A]/20 border border-[#16A34A]/40 flex items-center justify-center text-lg shrink-0">🛡️</div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-white text-sm">Clan Scrim</h4>
+                      <span className="text-[9px] font-black uppercase tracking-widest bg-[#16A34A] text-white px-2 py-0.5 rounded-full">New</span>
+                    </div>
+                    <p className="text-xs text-gray-300 mt-0.5">Call of Duty: Mobile 5v5. Clan masters put money on a best-of-3 series.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onNavigate('scrim')}
+                  className="relative whitespace-nowrap flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-xs transition-colors w-full lg:w-auto justify-center shadow-sm"
+                >
+                  Host a scrim
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+
+              <div className="mt-4 bg-green-50 border border-green-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#16A34A] shrink-0 shadow-sm border border-green-100">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>

@@ -6,7 +6,7 @@ import {
   IconClock,
 } from '../components/ui';
 import { ProfileAvatar as Avatar } from '../avatars';
-import { GAME_DETAILS, DEFAULT_DRAFT, type MatchDraft } from './CreateMatch';
+import { GAME_DETAILS, DEFAULT_DRAFT, calcPayout, type MatchDraft } from './CreateMatch';
 import { useProfile } from '../profile';
 import { fromGhs } from '../currency';
 
@@ -14,7 +14,7 @@ const REVIEW_WINDOW_SECONDS = 24 * 60 * 60; // 24h target turnaround
 
 type DisputeStage = 'opened' | 'evidence' | 'review' | 'resolved';
 
-export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onDisputeStatusChange: (active: boolean) => void }) {
+export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange, onWin, onLose, onNotify }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onDisputeStatusChange: (active: boolean) => void; onWin: (amount: number) => void; onLose: () => void; onNotify: (type: 'dispute_alert', title: string, body: string) => void }) {
   const { profile } = useProfile();
   const me = profile;
   const draft = matchDraft ?? { ...DEFAULT_DRAFT, wager: fromGhs(DEFAULT_DRAFT.wager, profile.currency) };
@@ -55,6 +55,23 @@ export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange 
 
   useEffect(() => {
     if (outcome) onDisputeStatusChange(false);
+  }, [outcome]);
+
+  // Settle the money when the decision lands
+  useEffect(() => {
+    if (!outcome) return;
+    if (outcome === 'won') {
+      onWin(calcPayout(draft.wager).winnings);
+    } else {
+      onLose();
+    }
+    onNotify(
+      'dispute_alert',
+      'Dispute resolved',
+      outcome === 'won'
+        ? 'We confirmed your result. Your winnings were added to your wallet.'
+        : "We found in your opponent's favor. Your stake was released to them."
+    );
   }, [outcome]);
 
   const fmtCountdown = (s: number) => {
@@ -256,7 +273,7 @@ export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange 
             <div className="mt-2 bg-white rounded-2xl px-6 py-3 border border-green-100 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Amount credited</p>
               <p className="text-2xl font-black text-[#16A34A]" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                {profile.currency} {(draft.wager * 2 * 0.9).toFixed(2)}
+                {profile.currency} {calcPayout(draft.wager).winnings.toFixed(2)}
               </p>
             </div>
             <button

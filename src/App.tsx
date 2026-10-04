@@ -28,6 +28,7 @@ const Leaderboard = lazy(() => import('./screens/Leaderboard'));
 const Deposit = lazy(() => import('./screens/Deposit'));
 const JoinMatch = lazy(() => import('./screens/JoinMatch'));
 const MatchHistory = lazy(() => import('./screens/MatchHistory'));
+const Scrim = lazy(() => import('./screens/Scrim'));
 
 // Admin screens
 const AdminOverview = lazy(() => import('./screens/admin/Overview'));
@@ -36,7 +37,7 @@ const AdminDisputeQueue = lazy(() => import('./screens/admin/DisputeQueue'));
 const AdminDisputeResolution = lazy(() => import('./screens/admin/DisputeResolution'));
 const AdminUserProfile = lazy(() => import('./screens/admin/UserProfile'));
 
-type ConsumerScreen = 'home' | 'login' | 'create-account' | 'dashboard' | 'create-match' | 'match-lobby' | 'active-match' | 'dispute' | 'payout' | 'settings' | 'notifications' | 'profile' | 'rules' | 'result' | 'lost' | 'locked' | 'deposit' | 'leaderboard' | 'join' | 'matches';
+type ConsumerScreen = 'home' | 'login' | 'create-account' | 'dashboard' | 'create-match' | 'match-lobby' | 'active-match' | 'dispute' | 'payout' | 'settings' | 'notifications' | 'profile' | 'rules' | 'result' | 'lost' | 'locked' | 'deposit' | 'leaderboard' | 'join' | 'matches' | 'scrim';
 type AdminScreen = 'admin-overview' | 'admin-match-feed' | 'admin-dispute-queue' | 'admin-dispute-resolution' | 'admin-user-profile';
 type Screen = ConsumerScreen | AdminScreen;
 
@@ -81,6 +82,7 @@ const DEMO_SCREENS: { label: string; id: Screen }[] = [
   { label: 'Payout', id: 'payout' },
   { label: 'Join Match', id: 'join' },
   { label: 'My Matches 📋', id: 'matches' },
+  { label: 'Clan Scrim 🛡️', id: 'scrim' },
   { label: 'Leaderboard 🏆', id: 'leaderboard' },
   { label: 'Settings', id: 'settings' },
   { label: 'Notifications', id: 'notifications' },
@@ -301,7 +303,7 @@ function DemoNav({ current, onChange, verified, onToggleVerified }: { current: S
   );
 }
 
-function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive, stats, matchHistory }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void; stats: { wins: number; losses: number; streak: number; xp: number }; matchHistory: MatchRecord[] }) {
+function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balance, locked, onWin, onWithdraw, onLock, onDeposit, verified, onSignedUp, notifs, onMarkRead, onMarkAllRead, joinCode, onJoinCode, onJoined, onNotify, onLose, disputeActive, setDisputeActive, stats, matchHistory, onScrimEnd }: { screen: ConsumerScreen; onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onMatchCreated: (d: MatchDraft) => void; balance: number; locked: number; onWin: (amount: number) => void; onWithdraw: (amount: number) => void; onLock: (amount: number) => void; onDeposit: (amount: number) => void; verified: boolean; onSignedUp: () => void; notifs: Notification[]; onMarkRead: (id: string) => void; onMarkAllRead: () => void; joinCode: string; onJoinCode: (code: string) => void; onJoined: (d: MatchDraft) => void; onNotify: (type: Notification['type'], title: string, body: string) => void; onLose: () => void; disputeActive: boolean; setDisputeActive: (v: boolean) => void; stats: { wins: number; losses: number; streak: number; xp: number }; matchHistory: MatchRecord[]; onScrimEnd: (result: 'won' | 'lost' | 'refund', stake: number, payout: number) => void }) {
   const isLobby = screen === 'match-lobby';
   const { profile } = useProfile();
 
@@ -384,7 +386,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'create-match' && <CreateMatch onNavigate={onNavigate} onMatchCreated={onMatchCreated} onJoinCode={onJoinCode} />}
           {screen === 'match-lobby' && <MatchLobby onNavigate={onNavigate} matchDraft={matchDraft} onLock={onLock} onNotify={onNotify} stats={stats} />}
           {screen === 'active-match' && <ActiveMatch onNavigate={onNavigate} matchDraft={matchDraft} onWin={onWin} onNotify={onNotify} onLose={onLose} />}
-          {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} onDisputeStatusChange={setDisputeActive} />}
+          {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} onDisputeStatusChange={setDisputeActive} onWin={onWin} onLose={onLose} onNotify={onNotify} />}
           {screen === 'payout' && <Payout onNavigate={onNavigate} balance={balance} onWithdraw={onWithdraw} />}
           {screen === 'deposit' && <Deposit onNavigate={onNavigate} balance={balance} onDeposit={onDeposit} />}
           {screen === 'settings' && <Settings onNavigate={onNavigate} verified={verified} />}
@@ -397,6 +399,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'locked' && <VerificationGate onNavigate={onNavigate} />}
           {screen === 'join' && <JoinMatch onNavigate={onNavigate} code={joinCode} onJoined={onJoined} />}
           {screen === 'matches' && <MatchHistory onNavigate={onNavigate} history={matchHistory} stats={stats} />}
+          {screen === 'scrim' && <Scrim onNavigate={onNavigate} balance={balance} onLock={onLock} onScrimEnd={onScrimEnd} onNotify={onNotify} />}
         </Suspense>
       </main>
 
@@ -627,12 +630,28 @@ function AppInner() {
   }, [profile.currency]);
 
   const addNotif = (type: Notification['type'], title: string, body: string) => {
-    const n = { id: `n-${Date.now()}`, type, title, body: body.replace(/GHS/g, profile.currency), time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
+    const n = { id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, type, title, body: body.replace(/GHS/g, profile.currency), time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
     setNotifs(prev => [n, ...prev]);
     setToast(n);
   };
   const markRead = (id: string) => setNotifs(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
   const markAllRead = () => setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+
+  const onScrimEnd = (result: 'won' | 'lost' | 'refund', stake: number, payout: number) => {
+    setLocked(l => Math.max(0, l - stake));
+    if (result === 'refund') {
+      setBalance(b => b + stake);
+      addNotif('payout', 'Scrim postponed', `Both clan masters agreed. GHS ${stake.toFixed(2)} was refunded to your wallet.`);
+      return;
+    }
+    const won = result === 'won';
+    if (won) setBalance(b => b + payout);
+    setStats(s => won
+      ? { wins: s.wins + 1, losses: s.losses, streak: s.streak + 1, xp: s.xp + 150 }
+      : { ...s, losses: s.losses + 1, streak: 0, xp: s.xp + 40 });
+    setMatchHistory(h => [{ id: `h-${Date.now()}`, game: 'CODM', mode: 'Clan Scrim 5v5', wager: stake, result, amount: won ? payout : stake, date: new Date().toISOString() }, ...h]);
+    addNotif(won ? 'payout' : 'match_invite', won ? 'Scrim won!' : 'Scrim lost', won ? `GHS ${payout.toFixed(2)} was added to your wallet.` : 'Your stake went to the winning clan. Good series!');
+  };
 
   const admin = isAdmin(screen);
 
@@ -648,7 +667,7 @@ function AppInner() {
       if (screen === 'settings' && s === 'login') localStorage.removeItem('proveit_signed_in');
       if (s === 'home' && localStorage.getItem('proveit_signed_in') === '1') { setScreen('dashboard'); return; }
     } catch {}
-    if (!verified && ['create-match', 'join', 'payout'].includes(s)) {
+    if (!verified && ['create-match', 'join', 'payout', 'scrim'].includes(s)) {
       setScreen('locked');
       return;
     }
@@ -669,6 +688,7 @@ function AppInner() {
           setDisputeActive={setDisputeActive}
           stats={stats}
           matchHistory={matchHistory}
+          onScrimEnd={onScrimEnd}
           onMatchCreated={(d) => { setMatchDraft(d); addNotif('match_invite', 'Match created', `${d.game} ${d.mode}, GHS ${d.wager.toFixed(2)} wager. Invite link is ready.`); }}
           balance={balance}
           locked={locked}
