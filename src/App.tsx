@@ -556,7 +556,13 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
   );
 }
 
+const STORE_KEY = 'proveit_state_v1';
+const loadState = () => {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { return {}; }
+};
+
 function AppInner() {
+  const [saved] = useState<any>(loadState);
   const [showSplash, setShowSplash] = useState(() => {
     try { return !sessionStorage.getItem('proveit_splash_seen'); } catch { return true; }
   });
@@ -578,15 +584,15 @@ function AppInner() {
     return '';
   });
   const [prevScreen, setPrevScreen] = useState<Screen>('dashboard');
-  const [matchDraft, setMatchDraft] = useState<MatchDraft | null>(null);
-  const [balance, setBalance] = useState(2840);
-  const [locked, setLocked] = useState(0);
-  const [verified, setVerified] = useState(true);
-  const [disputeActive, setDisputeActive] = useState(false);
-  const [stats, setStats] = useState({ wins: 0, losses: 0, streak: 0, xp: 0 });
-  const [matchHistory, setMatchHistory] = useState<MatchRecord[]>([]);
-  const [notifs, setNotifs] = useState<Notification[]>([]);
-  const [toast, setToast] = useState<Notification | null>(null);
+  const [matchDraft, setMatchDraft] = useState<MatchDraft | null>(saved.matchDraft ?? null);
+  const [balance, setBalance] = useState<number>(saved.balance ?? 2840);
+  const [locked, setLocked] = useState<number>(saved.locked ?? 0);
+  const [verified, setVerified] = useState<boolean>(saved.verified ?? true);
+  const [disputeActive, setDisputeActive] = useState<boolean>(saved.disputeActive ?? false);
+  const [stats, setStats] = useState<{ wins: number; losses: number; streak: number; xp: number }>(saved.stats ?? { wins: 0, losses: 0, streak: 0, xp: 0 });
+  const [matchHistory, setMatchHistory] = useState<MatchRecord[]>(saved.matchHistory ?? []);
+  const [notifs, setNotifs] = useState<Notification[]>(saved.notifs ?? []);
+  const [toast, setToast] = useState<Notification | null>(null)
 
   useEffect(() => {
     if (!toast) return;
@@ -602,6 +608,12 @@ function AppInner() {
       }
     } catch {}
   }, [screen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ balance, locked, verified, disputeActive, stats, matchHistory, matchDraft, notifs }));
+    } catch {}
+  }, [balance, locked, verified, disputeActive, stats, matchHistory, matchDraft, notifs]);
 
   const { profile } = useProfile();
   const addNotif = (type: Notification['type'], title: string, body: string) => {
