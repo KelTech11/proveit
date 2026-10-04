@@ -122,9 +122,18 @@ export function ProfileAvatar(props: ComponentProps<typeof Avatar>) {
   const art = profile.avatar ? ART[profile.avatar] : undefined;
   if (!art || props.name !== profile.name) return <Avatar {...props} />;
   const px = SIZE_PX[String(props.size)] ?? 40;
+  const badge = Math.max(14, Math.round(px * 0.36));
   return (
-    <div className="shrink-0 rounded-full overflow-hidden" style={{ width: px, height: px }}>
-      <AvatarArt id={profile.avatar as string} px={px} />
+    <div className="relative shrink-0" style={{ width: px, height: px }}>
+      <div className="rounded-full overflow-hidden" style={{ width: px, height: px }}>
+        <AvatarArt id={profile.avatar as string} px={px} />
+      </div>
+      <span
+        className="absolute -bottom-0.5 -right-0.5 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center leading-none"
+        style={{ width: badge, height: badge, fontSize: Math.max(9, Math.round(px * 0.22)) }}
+      >
+        {profile.country === 'NG' ? '🇳🇬' : '🇬🇭'}
+      </span>
     </div>
   );
 }
