@@ -25,9 +25,17 @@ const GameIcon = ({ game }: { game: string }) => {
 };
 
 import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 
 export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats, matchDraft }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number }; matchDraft: MatchDraft | null }) {
   const { profile: me } = useProfile();
+  const money = (g: number) =>
+    `${me.currency} ${fromGhs(g, me.currency).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const compactMoney = (g: number) => {
+    const n = fromGhs(g, me.currency);
+    const t = n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
+    return `${me.currency} ${t}`;
+  };
   const liveBattle = matchDraft && locked > 0
     ? { draft: matchDraft, game: GAME_DETAILS[matchDraft.game], opponent: players[1] }
     : null;
@@ -226,7 +234,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Platform Live Feed</h4>
                   </div>
                   <p className="text-3xl font-black text-gray-900 mb-2 tracking-tight" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    GHS 480K
+                    {compactMoney(480000)}
                   </p>
                   <p className="text-xs text-gray-500 font-medium leading-relaxed pr-4">Total funds securely locked in escrow across Ghana & Nigeria.</p>
                 </div>
@@ -323,7 +331,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-gray-900">GHS 450.00</span>
+                      <span className="text-base font-black text-gray-900">{money(450)}</span>
                       <button disabled className="px-4 py-1.5 rounded-lg bg-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
                         Coming Soon
                       </button>
@@ -356,7 +364,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-gray-900">GHS 300.00</span>
+                      <span className="text-base font-black text-gray-900">{money(300)}</span>
                       <button disabled className="px-4 py-1.5 rounded-lg bg-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
                         Coming Soon
                       </button>

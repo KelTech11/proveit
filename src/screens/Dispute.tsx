@@ -8,13 +8,16 @@ import {
 } from '../components/ui';
 import { me } from '../data';
 import { GAME_DETAILS, DEFAULT_DRAFT, type MatchDraft } from './CreateMatch';
+import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 
 const REVIEW_WINDOW_SECONDS = 24 * 60 * 60; // 24h target turnaround
 
 type DisputeStage = 'opened' | 'evidence' | 'review' | 'resolved';
 
 export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onDisputeStatusChange: (active: boolean) => void }) {
-  const draft = matchDraft ?? DEFAULT_DRAFT;
+  const { profile } = useProfile();
+  const draft = matchDraft ?? { ...DEFAULT_DRAFT, wager: fromGhs(DEFAULT_DRAFT.wager, profile.currency) };
   const game = GAME_DETAILS[draft.game];
 
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange 
               </div>
               <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Dispute #{disputeId}</h1>
             </div>
-            <p className="text-gray-500 font-semibold text-sm">{game.title} • {draft.mode} • GHS {draft.wager.toFixed(2)}</p>
+            <p className="text-gray-500 font-semibold text-sm">{game.title} • {draft.mode} • {profile.currency} {draft.wager.toFixed(2)}</p>
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-start gap-3 max-w-sm">
@@ -253,7 +256,7 @@ export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange 
             <div className="mt-2 bg-white rounded-2xl px-6 py-3 border border-green-100 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Amount credited</p>
               <p className="text-2xl font-black text-[#16A34A]" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                GHS {(draft.wager * 2 * 0.9).toFixed(2)}
+                {profile.currency} {(draft.wager * 2 * 0.9).toFixed(2)}
               </p>
             </div>
             <button
@@ -290,7 +293,7 @@ export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange 
         {(stage === 'evidence' || stage === 'review') && (
           <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
             <IconAlertTriangle size={14} className="text-amber-500" />
-            <span>GHS {(draft.wager * 2).toFixed(2)} is held in escrow until this dispute is resolved. No action needed from you right now.</span>
+            <span>{profile.currency} {(draft.wager * 2).toFixed(2)} is held in escrow until this dispute is resolved. No action needed from you right now.</span>
           </div>
         )}
 

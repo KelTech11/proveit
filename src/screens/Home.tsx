@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import logo from '../assets/proveit-logo.png';
+import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 
 const OPEN_CHALLENGES = [
-  { id: 1, game: 'FC Mobile', mode: 'H2H • 90 mins', player: 'Kofi_King', amount: 'GHS 450.00', winRate: '68%', avatar: '🇬🇭' },
-  { id: 2, game: 'CODM', mode: '1v1 Killhouse', player: 'GhostNaija', amount: 'NGN 25,000', winRate: '72%', avatar: '🇳🇬' },
-  { id: 3, game: 'FC Mobile', mode: 'H2H • 90 mins', player: 'StarBoy_99', amount: 'NGN 10,000', winRate: '54%', avatar: '🇳🇬' },
-  { id: 4, game: 'CODM', mode: 'Frontline • Crash', player: 'AccraSniper', amount: 'GHS 200.00', winRate: '61%', avatar: '🇬🇭' },
+  { id: 1, game: 'FC Mobile', mode: 'H2H • 90 mins', player: 'Kofi_King', ghs: 450, winRate: '68%', avatar: '🇬🇭' },
+  { id: 2, game: 'CODM', mode: '1v1 Killhouse', player: 'GhostNaija', ghs: 220, winRate: '72%', avatar: '🇳🇬' },
+  { id: 3, game: 'FC Mobile', mode: 'H2H • 90 mins', player: 'StarBoy_99', ghs: 90, winRate: '54%', avatar: '🇳🇬' },
+  { id: 4, game: 'CODM', mode: 'Frontline • Crash', player: 'AccraSniper', ghs: 200, winRate: '61%', avatar: '🇬🇭' },
 ];
 
-const LIVE_FEEDS = [
-  "Chidi_B just won NGN 50,000 in CODM",
-  "Kwame_Pro just withdrew GHS 1,200",
-  "New FC Mobile high-roller lobby opened: GHS 1,000"
+const liveFeeds = (fmt: (g: number) => string) => [
+  `Chidi_B just won ${fmt(440)} in CODM`,
+  `Kwame_Pro just withdrew ${fmt(1200)}`,
+  `New FC Mobile high-roller lobby opened: ${fmt(1000)}`,
 ];
 
 // Swapped the 2nd and 4th links for entirely new, stable Unsplash IDs
@@ -24,6 +26,11 @@ const HERO_IMAGES = [
 ];
 
 export default function Home({ onNavigate }: { onNavigate: (s: string) => void }) {
+  const { profile } = useProfile();
+  const cur = profile.currency;
+  const fmt = (g: number) =>
+    `${cur} ${fromGhs(g, cur).toLocaleString('en-US', cur === 'GHS' ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : undefined)}`;
+  const feeds = liveFeeds(fmt);
   useEffect(() => {
     const styleId = 'proveit-marquee-keyframes';
     if (!document.getElementById(styleId)) {
@@ -75,7 +82,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: string) => void }
       {/* Live Action Ticker */}
       <div className="w-full bg-gray-900 text-white border-b border-gray-800 py-2.5 overflow-hidden flex items-center shadow-inner">
         <div className="flex animate-[marquee_20s_linear_infinite] whitespace-nowrap">
-          {[...LIVE_FEEDS, ...LIVE_FEEDS].map((feed, i) => (
+          {[...feeds, ...feeds].map((feed, i) => (
             <span key={i} className="text-xs font-semibold mx-8 flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               {feed}
@@ -185,7 +192,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: string) => void }
                     
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">To Win</p>
-                      <p className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{challenge.amount}</p>
+                      <p className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{fmt(challenge.ghs)}</p>
                     </div>
                   </div>
 

@@ -9,6 +9,7 @@ import {
   IconArrowRight,
 } from '../components/ui';
 import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 
 type Method = 'mobile' | 'paystack' | null;
 type MobileNetwork = 'mtn' | 'telecel' | 'airteltigo';
@@ -26,7 +27,7 @@ const MOBILE_NETWORKS = {
   ],
 };
 
-const MIN_DEPOSIT = 10;
+const MIN_DEPOSIT_GHS = 10;
 
 const cleanAmount = (v: string) => {
   const s = v.replace(/[^\d.]/g, '');
@@ -38,6 +39,7 @@ export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate
   const { profile: me } = useProfile();
   const CURRENCY_LABEL = me.currency;
   const COUNTRY = me.country;
+  const MIN_DEPOSIT = fromGhs(MIN_DEPOSIT_GHS, CURRENCY_LABEL);
   const [method, setMethod] = useState<Method>(null);
   const [network, setNetwork] = useState<MobileNetwork>('mtn');
   const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, '').replace(/\D/g, '').replace(/^0+/, ''));
@@ -209,13 +211,13 @@ export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2">Quick amount</p>
               <div className="flex gap-2">
-                {[50, 100, 200, 500].map(v => (
+                {[50, 100, 200, 500].map(g => fromGhs(g, CURRENCY_LABEL)).map(v => (
                   <button
                     key={v}
                     onClick={() => setAmount(String(v))}
                     className="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:border-green-500 hover:bg-green-50 transition-colors"
                   >
-                    {v}
+                    {v.toLocaleString('en-US')}
                   </button>
                 ))}
               </div>

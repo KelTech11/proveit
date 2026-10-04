@@ -32,8 +32,8 @@ const BANK_LABELS: Record<string, string> = {
   NG: 'All Nigerian banks supported',
 };
 
-const WITHDRAWAL_FEE = 1;
-const MIN_WITHDRAWAL = 20;
+const WITHDRAWAL_FEE_GHS = 1;
+const MIN_WITHDRAWAL_GHS = 20;
 
 const cleanAmount = (v: string) => {
   const s = v.replace(/[^\d.]/g, '');
@@ -47,11 +47,14 @@ const BANKS: Record<string, string[]> = {
 };
 
 import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 
 export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate: (s: string) => void; balance: number; onWithdraw: (amount: number) => void }) {
   const { profile: me } = useProfile();
   const CURRENCY_LABEL = me.currency;
   const COUNTRY = me.country;
+  const WITHDRAWAL_FEE = fromGhs(WITHDRAWAL_FEE_GHS, CURRENCY_LABEL);
+  const MIN_WITHDRAWAL = fromGhs(MIN_WITHDRAWAL_GHS, CURRENCY_LABEL);
   const [method, setMethod] = useState<Method>(null);
   const [network, setNetwork] = useState<MobileNetwork>('mtn');
   const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, '').replace(/\D/g, '').replace(/^0+/, ''));

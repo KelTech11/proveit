@@ -3,6 +3,7 @@ import type { Notification } from './data';
 import { IconWallet, IconGamepad, IconBell, IconSettings, IconGrid, IconList, IconAlertTriangle, IconUser, IconShield, IconSearch, IconLogout, IconTrophy } from './components/ui';
 import { ProfileAvatar as Avatar } from './avatars';
 import logo from './assets/proveit-logo.png';
+import { fromGhs } from './currency';
 import FeedbackButton from './screens/FeedbackButton';
 import type { MatchDraft } from './screens/CreateMatch';
 import { ProfileProvider, useProfile } from './profile';
@@ -617,6 +618,10 @@ function AppInner() {
   }, [balance, locked, verified, disputeActive, stats, matchHistory, matchDraft, notifs]);
 
   const { profile } = useProfile();
+  useEffect(() => {
+    setBalance(fromGhs(2840, profile.currency));
+  }, [profile.currency]);
+
   const addNotif = (type: Notification['type'], title: string, body: string) => {
     const n = { id: `n-${Date.now()}`, type, title, body: body.replace(/GHS/g, profile.currency), time: 'Just now', read: false, matchId: 'M-7842' } as Notification;
     setNotifs(prev => [n, ...prev]);

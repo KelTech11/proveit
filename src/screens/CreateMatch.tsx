@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fromGhs } from '../currency';
 import { useProfile } from '../profile';
 
 // 1. IMPORTING YOUR EXACT LOCAL IMAGES
@@ -62,8 +63,8 @@ export const calcPayout = (wager: number) => {
   const fee = FEE_FREE_PERIOD ? 0 : pot * PLATFORM_FEE;
   return { pot, fee, winnings: pot - fee };
 };
-const WAGER_PRESETS = [20, 50, 100, 200, 500];
-const MIN_WAGER = 10;
+const WAGER_PRESETS_GHS = [20, 50, 100, 200, 500];
+const MIN_WAGER_GHS = 10;
 const MIN_UID_LENGTH = 6;
 
 export const GAME_FIELDS: Record<GameType, { uidLabel: string; uidHint: string; nameLabel: string }> = {
@@ -95,6 +96,9 @@ export const GAME_FIELDS: Record<GameType, { uidLabel: string; uidHint: string; 
 };
 
 export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: { onNavigate: (s: string) => void; onMatchCreated: (d: MatchDraft) => void; onJoinCode: (code: string) => void }) {
+  const { profile: wagerProfile } = useProfile();
+  const WAGER_PRESETS = WAGER_PRESETS_GHS.map(p => fromGhs(p, wagerProfile.currency));
+  const MIN_WAGER = fromGhs(MIN_WAGER_GHS, wagerProfile.currency);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -522,7 +526,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                   <div className="flex flex-wrap gap-2 mb-3">
                     {WAGER_PRESETS.map(p => (
                       <button
-                        key={p}
+                        key={p.toLocaleString('en-US')}
                         onClick={() => setWager(p)}
                         className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
                           wager === p ? 'border-[#16A34A] bg-green-50 text-[#16A34A]' : 'border-gray-200 text-gray-600 hover:border-gray-300'

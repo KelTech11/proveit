@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { me } from '../data';
+import { useProfile } from '../profile';
+import { fromGhs } from '../currency';
 import jokerBanner from '../assets/joker_white.jpg';
 
 type Row = {
@@ -68,6 +70,9 @@ function Badge({ name, idx, size, ring }: { name: string; idx: number; size: num
 }
 
 export default function Leaderboard({ onNavigate }: { onNavigate: (s: string) => void }) {
+  const { profile } = useProfile();
+  const cur = profile.currency;
+  const show = (n: number) => fromGhs(n, cur).toLocaleString('en-US');
   const [period, setPeriod] = useState<Period>('WEEK');
   const [filter, setFilter] = useState<Filter>('ALL');
 
@@ -117,7 +122,7 @@ export default function Leaderboard({ onNavigate }: { onNavigate: (s: string) =>
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: 'Players', val: ranked.length.toString() },
-            { label: period === 'WEEK' ? 'Won this week' : 'Won all-time', val: `GHS ${totalPaid.toLocaleString('en-US')}` },
+            { label: period === 'WEEK' ? 'Won this week' : 'Won all-time', val: `${cur} ${show(totalPaid)}` },
             { label: 'Top streak', val: `${Math.max(...ranked.map(r => r.streak))} 🔥` },
           ].map(s => (
             <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-5 py-3 text-center">
@@ -187,7 +192,7 @@ export default function Leaderboard({ onNavigate }: { onNavigate: (s: string) =>
                 <p className="font-black text-xs sm:text-lg mt-3 truncate max-w-full" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{p.name}</p>
                 <span className="text-[8px] sm:text-[10px] font-black tracking-[0.2em] mt-0.5" style={{ color: t.color }}>{t.label}</span>
                 <p className="mt-2 text-sm sm:text-2xl font-black text-white" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                  <span className="hidden sm:inline text-xs text-gray-400 mr-1">GHS</span>{value(p).toLocaleString('en-US')}
+                  <span className="hidden sm:inline text-xs text-gray-400 mr-1">{cur}</span>{show(value(p))}
                 </p>
                 <p className="text-[9px] sm:text-xs text-gray-400 font-semibold mt-1">
                   {p.wins}W · {Math.round((p.wins / p.played) * 100)}% · {p.country}
@@ -228,7 +233,7 @@ export default function Leaderboard({ onNavigate }: { onNavigate: (s: string) =>
               </div>
               <div className="text-right">
                 <p className="text-sm sm:text-base font-black text-[#4ADE80]" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                  GHS {value(p).toLocaleString('en-US')}
+                  {cur} {show(value(p))}
                 </p>
                 <p className="text-[10px] text-gray-500 font-semibold">{p.wins} wins</p>
               </div>
@@ -246,7 +251,7 @@ export default function Leaderboard({ onNavigate }: { onNavigate: (s: string) =>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold truncate">Your rank</p>
               <p className="text-[11px] text-gray-400 font-medium truncate">
-                {mine.rank === 1 ? "You're on top. Defend it." : `${(value(ranked[mine.rank - 2]) - value(mine)).toLocaleString('en-US')} GHS to pass ${ranked[mine.rank - 2].name}`}
+                {mine.rank === 1 ? "You're on top. Defend it." : `${show(value(ranked[mine.rank - 2]) - value(mine))} ${cur} to pass ${ranked[mine.rank - 2].name}`}
               </p>
             </div>
             <button
