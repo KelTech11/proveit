@@ -3,6 +3,7 @@ import type { Notification } from './data';
 import { IconWallet, IconGamepad, IconBell, IconSettings, IconGrid, IconList, IconAlertTriangle, IconUser, IconShield, IconSearch, IconLogout, IconTrophy } from './components/ui';
 import { ProfileAvatar as Avatar } from './avatars';
 import logo from './assets/proveit-logo.png';
+import FeedbackButton from './screens/FeedbackButton';
 import type { MatchDraft } from './screens/CreateMatch';
 import { ProfileProvider, useProfile } from './profile';
 
@@ -696,6 +697,7 @@ function AppInner() {
           onClose={() => setToast(null)}
         />
       )}
+      <FeedbackButton screen={screen} />
       <DemoNav
         current={screen}
         onChange={navigate}
