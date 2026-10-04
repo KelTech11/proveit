@@ -3,6 +3,7 @@ import logo from '../assets/proveit-logo.png';
 import { Button, Input, PhoneInput } from '../components/ui';
 import { type Country } from '../data';
 import { useProfile } from '../profile';
+import { saveAccount } from '../account';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -200,7 +201,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
   const { updateProfile } = useProfile();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const d = phone.replace(/\D/g, '');
     const formattedPhone = country === 'GH'
       ? `${dialCode} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
@@ -215,6 +216,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
       phone: formattedPhone,
       linkedGames,
     });
+    await saveAccount({ username, email: email.trim(), phone: formattedPhone, password });
     setSubmitted(true);
   };
 

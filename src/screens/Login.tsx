@@ -2,6 +2,7 @@ import { useState } from 'react';
 import logo from '../assets/proveit-logo.png';
 import { Button, Input } from '../components/ui';
 import ForgotPassword from './ForgotPassword';
+import { checkLogin } from '../account';
 
 export default function Login({ onNavigate }: { onNavigate: (s: string) => void }) {
   const [username, setUsername] = useState('');
@@ -9,13 +10,28 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
   const [showPw, setShowPw] = useState(false);
   const [tried, setTried] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const errors: Record<string, string> = {};
   if (username.length < 3) errors.username = 'Enter your username';
   if (!password) errors.password = 'Enter your password';
 
-  const signIn = () => {
-    if (Object.keys(errors).length === 0) { onNavigate('dashboard'); return; }
+  const signIn = async () => {
+    if (Object.keys(errors).length === 0) {
+      if (busy) return;
+      setBusy(true);
+      setLoginError('');
+      const result = await checkLogin(username, password);
+      setBusy(false);
+      if (result === 'ok') { onNavigate('dashboard'); return; }
+      setLoginError(
+        result === 'no-account'
+          ? 'No account found on this device. Tap Create Account to make one.'
+          : 'Wrong username or password.'
+      );
+      return;
+    }
     setTried(true);
     setTimeout(() => {
       const el = document.querySelector('.border-red-400') as HTMLElement | null;
@@ -99,6 +115,12 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
             </button>
           </div>
 
+          {loginError && (
+            <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-3 py-2.5">
+              <p className="text-xs font-semibold text-red-700" style={{ fontFamily: 'Inter, sans-serif' }}>{loginError}</p>
+            </div>
+          )}
+
           {/* Sign in button */}
           <div className="flex flex-col gap-3">
             <Button
@@ -106,8 +128,9 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
               size="lg"
               fullWidth
               onClick={signIn}
+              disabled={busy}
             >
-              Sign In
+              {busy ? 'Signing in...' : 'Sign In'}
             </Button>
 
             <Button
