@@ -27,10 +27,16 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
   const [ping, setPing] = useState<number | null>(null);
 
   useEffect(() => {
-    const t0 = performance.now();
-    fetch('/', { method: 'HEAD', cache: 'no-store' })
-      .then(() => setPing(Math.round(performance.now() - t0)))
-      .catch(() => setPing(null));
+    let cancelled = false;
+    const measure = () => {
+      const t0 = performance.now();
+      fetch('/', { method: 'HEAD', cache: 'no-store' })
+        .then(() => { if (!cancelled) setPing(Math.round(performance.now() - t0)); })
+        .catch(() => { if (!cancelled) setPing(null); });
+    };
+    measure();
+    const id = setInterval(measure, 2000);
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   const sendChat = () => {
