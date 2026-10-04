@@ -96,6 +96,27 @@ export default function JoinMatch({
   }
 
 
+  if (hostCurrency !== profile.currency) {
+    return (
+      <div className="min-h-screen bg-[#F4F7F9] flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-5 text-3xl">🌍</div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+          This match isn't for your country
+        </h1>
+        <p className="text-gray-500 text-sm max-w-sm mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+          For now, matches are {profile.currency === 'GHS' ? 'Ghana vs Ghana' : 'Nigeria vs Nigeria'}. This invite is for {hostCurrency === 'NGN' ? 'Nigerian' : 'Ghanaian'} players, and your wallet is in {profile.currency}.
+        </p>
+        <button
+          onClick={() => onNavigate('back')}
+          className="px-8 py-3.5 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-sm transition-colors"
+          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          Go back
+        </button>
+      </div>
+    );
+  }
+
   const shownCode = (code.trim().split('/').filter(Boolean).pop() || 'DEMO42').slice(0, 10).toUpperCase();
   const game = GAME_DETAILS[match.game];
   const fields = GAME_FIELDS[match.game];
