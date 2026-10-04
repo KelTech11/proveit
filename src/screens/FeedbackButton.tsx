@@ -101,9 +101,63 @@ export default function FeedbackButton({ screen }: { screen: string }) {
 
             {sent ? (
               <div className="text-center py-4">
-                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3 text-2xl">💬</div>
-                <p className="text-sm font-black text-gray-900 mb-1">Feedback sent</p>
-                <p className="text-xs text-gray-500 mb-5">Thank you for helping us improve ProveIt.</p>
+                <style>{`
+                  @keyframes fb-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+                  @keyframes fb-draw { to { stroke-dashoffset: 0; } }
+                  @keyframes fb-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.7); opacity: 0; } }
+                  @keyframes fb-burst {
+                    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+                    100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(220deg) scale(1); opacity: 0; }
+                  }
+                  @keyframes fb-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                `}</style>
+
+                <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <span className="absolute inset-0 rounded-full border-2 border-green-500" style={{ animation: 'fb-ring 1s ease-out 0.3s both' }} />
+                  {Array.from({ length: 14 }).map((_, i) => {
+                    const a = (i / 14) * Math.PI * 2;
+                    const d = 62 + (i % 3) * 16;
+                    return (
+                      <span
+                        key={i}
+                        className="absolute left-1/2 top-1/2 w-2 h-2 rounded-sm"
+                        style={{
+                          background: ['#16A34A', '#22C55E', '#F59E0B', '#3B82F6', '#EC4899'][i % 5],
+                          '--x': `${Math.cos(a) * d}px`,
+                          '--y': `${Math.sin(a) * d}px`,
+                          animation: 'fb-burst 0.9s ease-out 0.3s both',
+                        } as React.CSSProperties}
+                      />
+                    );
+                  })}
+                  <div
+                    className="relative w-16 h-16 rounded-full bg-[#16A34A] flex items-center justify-center shadow-lg"
+                    style={{ animation: 'fb-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both' }}
+                  >
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: 'fb-draw 0.45s ease-out 0.35s forwards' }} />
+                    </svg>
+                  </div>
+                </div>
+
+                <p
+                  className="text-xl font-black text-gray-900 mb-1"
+                  style={{ fontFamily: 'Chakra Petch, sans-serif', animation: 'fb-rise 0.5s ease-out 0.55s both' }}
+                >
+                  Feedback sent! 🎉
+                </p>
+                <p className="text-sm text-gray-600 mb-1" style={{ animation: 'fb-rise 0.5s ease-out 0.7s both' }}>
+                  {type === 'Bug'
+                    ? "Thanks for spotting that. We'll look into it."
+                    : type === 'Idea'
+                    ? "Love the idea. We'll think it through."
+                    : type === 'Liked'
+                    ? "Glad you're enjoying ProveIt!"
+                    : 'Thanks for reaching out.'}
+                </p>
+                <p className="text-xs text-gray-400 mb-5" style={{ animation: 'fb-rise 0.5s ease-out 0.85s both' }}>
+                  We read every message. You're helping us build ProveIt.
+                </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSent(false)}
