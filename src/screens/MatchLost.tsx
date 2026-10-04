@@ -1,10 +1,12 @@
 import { DEFAULT_DRAFT, GAME_DETAILS, type MatchDraft } from './CreateMatch';
+import { useProfile } from '../profile';
 
 export default function MatchLost({ onNavigate, matchDraft }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null }) {
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
+  const { profile } = useProfile();
   const money = (n: number) =>
-    `GHS ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `${profile.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">

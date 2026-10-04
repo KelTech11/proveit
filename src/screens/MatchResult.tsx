@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
 import { DEFAULT_DRAFT, GAME_DETAILS, FEE_FREE_PERIOD, calcPayout, type MatchDraft } from './CreateMatch';
+import { useProfile } from '../profile';
 
 export default function MatchResult({ onNavigate, matchDraft }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null }) {
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
   const { pot, fee, winnings } = calcPayout(draft.wager);
+  const { profile } = useProfile();
   const money = (n: number) =>
-    `GHS ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `${profile.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const confetti = useMemo(
     () =>

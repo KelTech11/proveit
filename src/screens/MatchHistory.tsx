@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { GAME_DETAILS } from './CreateMatch';
 import type { MatchRecord } from '../App';
+import { useProfile } from '../profile';
 
 type Filter = 'all' | 'won' | 'lost';
 
-const money = (n: number) =>
-  `GHS ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatMoney = (n: number, currency: string) =>
+  `${currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -25,6 +26,8 @@ export default function MatchHistory({
   stats: { wins: number; losses: number; streak: number; xp: number };
 }) {
   const [filter, setFilter] = useState<Filter>('all');
+  const { profile } = useProfile();
+  const money = (n: number) => formatMoney(n, profile.currency);
 
   const played = stats.wins + stats.losses;
   const winRate = played > 0 ? Math.round((stats.wins / played) * 100) : 0;
