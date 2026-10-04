@@ -606,6 +606,9 @@ function AppInner() {
   useEffect(() => {
     try { sessionStorage.setItem('proveit_screen', screen); } catch {}
     try {
+      if (!['home', 'login', 'create-account', 'join'].includes(screen)) localStorage.setItem('proveit_signed_in', '1');
+    } catch {}
+    try {
       if (screen !== 'join' && window.location.pathname.startsWith('/join/')) {
         window.history.replaceState(null, '', '/');
       }
