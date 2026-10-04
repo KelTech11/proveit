@@ -222,7 +222,11 @@ export default function JoinMatch({
           <button
             disabled={!canJoin}
             onClick={() => {
-              onJoined({ game: match.game, mode: match.mode, wager: match.wager, uid: uid.trim(), username: name.trim() });
+              let hostName = '';
+              try {
+                hostName = String(JSON.parse(atob(decodeURIComponent(code.trim().split('/').filter(Boolean).pop() || ''))).u || '');
+              } catch {}
+              onJoined({ game: match.game, mode: match.mode, wager: match.wager, uid: uid.trim(), username: name.trim(), host: hostName });
               onNavigate('match-lobby');
             }}
             className={`flex-1 px-8 py-3.5 rounded-xl font-bold text-sm text-white transition-all shadow-md ${

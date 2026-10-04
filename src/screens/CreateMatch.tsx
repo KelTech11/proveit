@@ -10,7 +10,7 @@ import freeFireCover from '../assets/freefire.jpg';
 // --- Game Data specifically tailored to match the design ---
 export type GameType = 'CODM' | 'FC Mobile' | 'eFootball' | 'Free Fire' | 'PUBG Mobile';
 
-export type MatchDraft = { game: GameType; mode: string; wager: number; uid: string; username: string };
+export type MatchDraft = { game: GameType; mode: string; wager: number; uid: string; username: string; host?: string };
 
 export const DEFAULT_DRAFT: MatchDraft = { game: 'CODM', mode: '1v1', wager: 225, uid: '', username: '' };
 

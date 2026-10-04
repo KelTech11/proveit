@@ -13,7 +13,9 @@ import { useProfile } from '../profile';
 
 export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, stats, balance }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void; stats: { wins: number; losses: number; streak: number; xp: number }; balance: number }) {
   const { profile: me } = useProfile();
-  const opponent = opponentFor(me.country);
+  const sampleOpponent = opponentFor(me.country);
+  // When joining through an invite link, the opponent is the real host
+  const opponent = matchDraft?.host ? { ...sampleOpponent, name: matchDraft.host, username: matchDraft.host } : sampleOpponent;
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
   const pot = draft.wager * 2;

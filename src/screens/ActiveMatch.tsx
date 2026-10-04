@@ -14,7 +14,9 @@ import { useProfile } from '../profile';
 
 export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, onLose }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onWin: (amount: number) => void; onNotify: (type: 'match_invite' | 'dispute_alert', title: string, body: string) => void; onLose: () => void }) {
   const { profile: me } = useProfile();
-  const opponent = opponentFor(me.country);
+  const sampleOpponent = opponentFor(me.country);
+  // When joining through an invite link, the opponent is the real host
+  const opponent = matchDraft?.host ? { ...sampleOpponent, name: matchDraft.host, username: matchDraft.host } : sampleOpponent;
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const gameMeta = GAME_DETAILS[draft.game];
   const { winnings } = calcPayout(draft.wager);
