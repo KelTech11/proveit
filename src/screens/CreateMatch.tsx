@@ -140,12 +140,15 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
       })
     : [];
 
-  const modeOptions = selectedGame ? GAME_DETAILS[selectedGame].modes.split(' / ') : [];
+  const modeOptions = selectedGame
+    ? [...GAME_DETAILS[selectedGame].modes.split(' / '), ...(selectedGame === 'CODM' ? ['Scrim'] : [])]
+    : [];
   const activeMode = modeOptions.includes(mode) ? mode : '';
   const pot = wager * 2;
   const fee = pot * PLATFORM_FEE;
   const winnerGets = pot - fee;
-  const canContinueWager = !!activeMode && wager >= MIN_WAGER;
+  const isScrim = activeMode === 'Scrim';
+  const canContinueWager = isScrim || (!!activeMode && wager >= MIN_WAGER);
   const money = (n: number) =>
     `${CURRENCY} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -428,28 +431,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
 
               </div>
 
-              <div className="mt-8 relative overflow-hidden bg-[#0B0B0F] border border-gray-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
-                <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#16A34A] rounded-full blur-3xl opacity-30 pointer-events-none" />
-                <div className="relative flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#16A34A]/20 border border-[#16A34A]/40 flex items-center justify-center text-lg shrink-0">🛡️</div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-white text-sm">Clan Scrim</h4>
-                      <span className="text-[9px] font-black uppercase tracking-widest bg-[#16A34A] text-white px-2 py-0.5 rounded-full">New</span>
-                    </div>
-                    <p className="text-xs text-gray-300 mt-0.5">Call of Duty: Mobile 5v5. Clan masters put money on a best-of-3 series.</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => onNavigate('scrim')}
-                  className="relative whitespace-nowrap flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-xs transition-colors w-full lg:w-auto justify-center shadow-sm"
-                >
-                  Host a scrim
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-
-              <div className="mt-4 bg-green-50 border border-green-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
+              <div className="mt-8 bg-green-50 border border-green-100 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#16A34A] shrink-0 shadow-sm border border-green-100">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
@@ -524,7 +506,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
               {step === 2 && (
                 <div>
                   <h2 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    Set your wager
+                    {isScrim ? 'Choose your mode' : 'Set your wager'}
                   </h2>
                   <p className="text-sm text-gray-500 mb-6">Pick a mode and how much each player puts in. Winner takes the pot.</p>
 
@@ -538,11 +520,21 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                           activeMode === m ? 'border-[#16A34A] bg-green-50 text-[#16A34A]' : 'border-gray-200 text-gray-600 hover:border-gray-300'
                         }`}
                       >
-                        {m}
+                        {m === 'Scrim' ? '🛡️ Scrim 5v5' : m}
                       </button>
                     ))}
                   </div>
 
+                  {isScrim ? (
+                    <div className="rounded-2xl bg-[#0B0B0F] border border-gray-800 p-5 text-white">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-black text-sm" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Clan Scrim 5v5</p>
+                        <span className="text-[9px] font-black uppercase tracking-widest bg-[#16A34A] px-2 py-0.5 rounded-full">New</span>
+                      </div>
+                      <p className="text-xs text-gray-300">Clan masters put money on a best-of-3 series: Hardpoint, Search & Destroy and Control. You'll set your clan, your stake and your lineup on the next screen.</p>
+                    </div>
+                  ) : (
+                  <>
                   <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">Wager per player ({CURRENCY})</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {WAGER_PRESETS.map(p => (
@@ -577,6 +569,8 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                     <div className="flex justify-between border-t border-gray-200 pt-2"><span className="font-bold text-gray-900">Winner receives</span><span className="font-black text-[#16A34A]">{money(winnerGets)}</span></div>
                   </div>
                   <p className="text-[11px] text-gray-400 mt-3">Funds only lock in escrow once both players press Start.</p>
+                  </>
+                  )}
 
                   <div className="mt-6 flex items-center justify-between gap-3">
                     <button onClick={() => setStep(1)} className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200">
@@ -584,7 +578,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                     </button>
                     <button
                       disabled={!canContinueWager}
-                      onClick={() => setStep(3)}
+                      onClick={() => (isScrim ? onNavigate('scrim') : setStep(3))}
                       className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white transition-all shadow-md ${
                         canContinueWager ? 'bg-[#16A34A] hover:bg-[#15803d]' : 'bg-gray-300 cursor-not-allowed shadow-none'
                       }`}
