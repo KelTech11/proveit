@@ -157,6 +157,30 @@ export default function Home({ onNavigate }: { onNavigate: (s: string) => void }
                 Create Wager
               </button>
             </div>
+
+            {/* White copy of the text, shown only over the dark side of the image */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 z-30 flex items-center pointer-events-none [clip-path:inset(0_0_0_44%)] sm:[clip-path:inset(0_0_0_54%)]"
+            >
+              <div className="p-6 sm:p-10 w-full sm:w-[60%]">
+                <div className="invisible inline-block px-3 py-1 mb-4 rounded-full bg-green-100 border border-green-200 text-xs font-bold tracking-wide text-green-800">
+                  ⚡ 100% SECURE ESCROW
+                </div>
+                <h1 className="text-4xl sm:text-6xl font-black text-white mb-3 tracking-tight leading-tight" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                  You dey claim? <br/>
+                  <span className="text-[#16A34A]">
+                    Prove am.
+                  </span>
+                </h1>
+                <p className="text-white text-sm sm:text-base font-semibold mb-8 max-w-md" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  The premier skill-based wagering arena. Lock your funds in escrow, defeat your opponent, and withdraw cash instantly.
+                </p>
+                <button tabIndex={-1} className="invisible w-full sm:w-auto px-8 py-4 rounded-xl bg-[#16A34A] text-white font-black uppercase tracking-wider text-sm" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                  Create Wager
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Action Tabs */}
