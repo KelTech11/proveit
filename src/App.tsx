@@ -575,6 +575,7 @@ function AppInner() {
     } catch {}
     try {
       const saved = (sessionStorage.getItem('proveit_screen') as Screen) || 'home';
+      if (localStorage.getItem('proveit_signed_in') === '1' && ['home', 'login', 'create-account'].includes(saved)) return 'dashboard';
       return saved === 'join' ? 'create-match' : saved;
     } catch { return 'home'; }
   });
@@ -639,6 +640,11 @@ function AppInner() {
     }
     setPrevScreen(screen === 'locked' ? prevScreen : screen);
     if (s === 'join' && screen === 'dashboard') { setScreen('create-match'); return; }
+    try {
+      if ((screen === 'login' || screen === 'create-account') && s === 'dashboard') localStorage.setItem('proveit_signed_in', '1');
+      if (screen === 'settings' && s === 'login') localStorage.removeItem('proveit_signed_in');
+      if (s === 'home' && localStorage.getItem('proveit_signed_in') === '1') { setScreen('dashboard'); return; }
+    } catch {}
     if (!verified && ['create-match', 'join', 'payout'].includes(s)) {
       setScreen('locked');
       return;
