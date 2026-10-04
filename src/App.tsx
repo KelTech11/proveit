@@ -387,7 +387,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} onDisputeStatusChange={setDisputeActive} />}
           {screen === 'payout' && <Payout onNavigate={onNavigate} balance={balance} onWithdraw={onWithdraw} />}
           {screen === 'deposit' && <Deposit onNavigate={onNavigate} balance={balance} onDeposit={onDeposit} />}
-          {screen === 'settings' && <Settings onNavigate={onNavigate} />}
+          {screen === 'settings' && <Settings onNavigate={onNavigate} verified={verified} />}
           {screen === 'notifications' && <Notifications onNavigate={onNavigate} notifications={notifs} onMarkRead={onMarkRead} onMarkAllRead={onMarkAllRead} />}
           {screen === 'profile' && <OpponentProfile onNavigate={onNavigate} />}
           {screen === 'rules' && <MatchRules onNavigate={onNavigate} />}

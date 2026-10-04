@@ -68,7 +68,7 @@ function SettingRow({
   );
 }
 
-export default function Settings({ onNavigate }: { onNavigate: (s: string) => void }) {
+export default function Settings({ onNavigate, verified }: { onNavigate: (s: string) => void; verified: boolean }) {
   const { profile, updateProfile } = useProfile();
   const [linking, setLinking] = useState<GameType | null>(null);
   const [linkDraft, setLinkDraft] = useState('');
@@ -130,10 +130,19 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
               @{profile.username}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="verified">
-                <IconCheck size={10} />
-                Verified
-              </Badge>
+              {verified ? (
+                <Badge variant="verified">
+                  <IconCheck size={10} />
+                  Verified
+                </Badge>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  ⏳ Pending review
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -147,27 +156,37 @@ export default function Settings({ onNavigate }: { onNavigate: (s: string) => vo
             >
               Identity Verification
             </p>
-            <span className="text-xs text-green-600 font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Fully verified
+            <span
+              className={`text-xs font-semibold ${verified ? 'text-green-600' : 'text-amber-600'}`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              {verified ? 'Fully verified' : 'Under review'}
             </span>
           </div>
 
           <div className="flex flex-col gap-2.5">
-            {checks.map(c => (
-              <div key={c.title} className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <IconCheck size={12} className="text-green-600" />
+            {checks.map((c, i) => {
+              const done = verified || i === 0;
+              return (
+                <div key={c.title} className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${done ? 'bg-green-100' : 'bg-amber-100'}`}>
+                    {done ? (
+                      <IconCheck size={12} className="text-green-600" />
+                    ) : (
+                      <span className="text-[10px] leading-none">⏳</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+                      {c.title}
+                    </p>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      {done ? c.note : 'Under review, usually a few hours'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    {c.title}
-                  </p>
-                  <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {c.note}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
