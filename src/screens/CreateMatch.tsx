@@ -162,7 +162,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode, ba
     if (step === 4) setLinkTime(Date.now());
   }, [step]);
   const encodedMatch = selectedGame
-    ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager, t: linkTime, c: profile.currency })))
+    ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager, t: linkTime, c: profile.currency, u: profile.username })))
     : inviteCode;
   const inviteLink = `${window.location.origin}/join/${encodedMatch}`;
   const inviteMessage = selectedGame

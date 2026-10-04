@@ -37,10 +37,16 @@ export default function JoinMatch({
   const { profile } = useProfile();
   const decoded = decodeMatchCode(code);
   let hostCurrency: string = profile.currency;
+  let hostUsername = '';
   try {
     const cleaned = code.trim().split('/').filter(Boolean).pop() || '';
-    hostCurrency = String(JSON.parse(atob(decodeURIComponent(cleaned))).c || profile.currency);
+    const linkData = JSON.parse(atob(decodeURIComponent(cleaned)));
+    hostCurrency = String(linkData.c || profile.currency);
+    hostUsername = String(linkData.u || '');
   } catch {}
+  // Matches are same-country only, so the sample host comes from the player's own country
+  const sampleHost = profile.country === 'GH' ? players[2] : players[1];
+  const host = { ...sampleHost, name: hostUsername || sampleHost.name, username: hostUsername || sampleHost.username };
   // Same currency: exact amount. Different currency: convert through cedis.
   const match = {
     ...decoded,

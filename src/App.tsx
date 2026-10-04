@@ -743,7 +743,15 @@ function AppInner() {
 
   const admin = isAdmin(screen);
 
-  const navigate = (s: string) => {
+  const navigate = (target: string) => {
+    const aliases: Record<string, string> = {
+      overview: 'admin-overview',
+      'match-feed': 'admin-match-feed',
+      'dispute-queue': 'admin-dispute-queue',
+      'dispute-resolution': 'admin-dispute-resolution',
+      'user-profile': 'admin-user-profile',
+    };
+    const s = aliases[target] ?? target;
     if (s !== 'back' && !s.startsWith('admin-')) {
       try { sessionStorage.removeItem('proveit_admin_ok'); } catch {}
       setAdminUnlocked(false);
@@ -806,7 +814,18 @@ function AppInner() {
           onMarkRead={markRead}
           onMarkAllRead={markAllRead}
           verified={verified}
-          onSignedUp={() => { setVerified(false); addNotif('kyc', 'ID under review', "We're checking your documents. This usually takes a few hours."); }}
+          onSignedUp={() => {
+            // A new account starts clean instead of inheriting the previous account's wallet and history
+            setBalance(fromGhs(2840, profile.currency));
+            setLocked(0);
+            setStats({ wins: 0, losses: 0, streak: 0, xp: 0 });
+            setMatchHistory([]);
+            setNotifs([]);
+            setMatchDraft(null);
+            setDisputeActive(false);
+            setVerified(false);
+            addNotif('kyc', 'ID under review', "We're checking your documents. This usually takes a few hours.");
+          }}
           onDeposit={(a) => { setBalance(b => b + a); addNotif('payout', 'Deposit successful', `GHS ${a.toFixed(2)} was added to your wallet.`); }}
           joinCode={joinCode}
           onJoinCode={setJoinCode}
