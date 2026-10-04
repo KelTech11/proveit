@@ -8,12 +8,21 @@ import { saveAccount } from '../account';
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const DRAFT_KEY = 'proveit_signup_draft';
+
+// Change this to your own code, then send it to your testers
+const ACCESS_CODE = 'PROVE-TEST';
+const ACCESS_KEY = 'proveit_access';
 const loadDraft = () => {
   try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch { return {}; }
 };
 
 export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: (s: string) => void; onSignedUp: () => void }) {
   const [draft] = useState<any>(loadDraft);
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return localStorage.getItem(ACCESS_KEY) === '1'; } catch { return false; }
+  });
+  const [accessInput, setAccessInput] = useState('');
+  const [accessError, setAccessError] = useState('');
   const [step, setStep] = useState<Step>(Math.min(Number(draft.step) || 1, 4) as Step);
 
   // Step 1
@@ -239,6 +248,68 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
         <Button variant="primary" size="lg" onClick={() => { try { localStorage.removeItem(DRAFT_KEY); } catch {} onSignedUp(); onNavigate('dashboard'); }}>
           Go to my account
         </Button>
+      </div>
+    );
+  }
+
+  if (!unlocked) {
+    const tryCode = () => {
+      if (accessInput.trim().toUpperCase() === ACCESS_CODE) {
+        try { localStorage.setItem(ACCESS_KEY, '1'); } catch {}
+        setUnlocked(true);
+      } else {
+        setAccessError("That code isn't right. Check it and try again.");
+      }
+    };
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="flex items-center gap-3 px-6 pt-8 pb-4">
+          <div className="bg-black rounded-full px-3 py-2 flex items-center">
+            <img src={logo} alt="ProveIt" className="h-7 w-auto" />
+          </div>
+          <span className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+            Prove<span className="text-green-600">It</span>
+          </span>
+        </header>
+
+        <main className="flex-1 flex items-start justify-center px-6 pt-8 pb-10">
+          <div
+            className="w-full max-w-sm animate-fade-up"
+            onKeyDown={e => { if (e.key === 'Enter') tryCode(); }}
+          >
+            <div className="w-14 h-14 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-2xl mb-4">🔑</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+              Early access
+            </h1>
+            <p className="text-gray-500 text-sm mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
+              ProveIt is in private testing. Enter the access code you were given to create an account.
+            </p>
+
+            <div className="mb-3">
+              <Input
+                label="Access code"
+                type="text"
+                value={accessInput}
+                onChange={v => { setAccessInput(v.toUpperCase()); setAccessError(''); }}
+                placeholder="Enter your code"
+                autoComplete="off"
+                error={accessError || undefined}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
+              No code? You can still look around using the Demo button at the bottom of the screen.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <Button variant="primary" size="lg" fullWidth onClick={tryCode}>
+                Continue
+              </Button>
+              <Button variant="ghost" size="lg" fullWidth onClick={() => onNavigate('login')}>
+                Back to login
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
