@@ -152,6 +152,9 @@ export const players: Player[] = [
 
 export const me = players[0];
 
+// Demo opponent from the same country as the user (matches are same-country only)
+export const opponentFor = (country: Country) => (country === 'NG' ? players[1] : players[2]);
+
 export const matches: Match[] = [
   {
     id: 'M-7842',

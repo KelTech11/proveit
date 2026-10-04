@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { IconUpload, IconCheck, IconClock, IconAlertTriangle } from '../components/ui';
 import { ProfileAvatar as Avatar } from '../avatars';
-import { me, players, matches } from '../data';
+import { me, players, matches, opponentFor } from '../data';
 import { GAME_DETAILS, DEFAULT_DRAFT, calcPayout, type MatchDraft } from './CreateMatch';
 
 const opponent = players[1]; // EmkaBeast
@@ -14,6 +14,7 @@ import { useProfile } from '../profile';
 
 export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, onLose }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onWin: (amount: number) => void; onNotify: (type: 'match_invite' | 'dispute_alert', title: string, body: string) => void; onLose: () => void }) {
   const { profile: me } = useProfile();
+  const opponent = opponentFor(me.country);
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const gameMeta = GAME_DETAILS[draft.game];
   const { winnings } = calcPayout(draft.wager);
@@ -24,6 +25,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploaded = shots.length >= MIN_SHOTS;
+  const [uploadError, setUploadError] = useState('');
 
   const [myClaim, setMyClaim] = useState<Claim>(null);
   // Mock opponent behavior for the demo — in real backend this comes from the server
@@ -53,9 +55,11 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
   const handleFiles = (list: FileList | null | undefined) => {
     if (!list) return;
     const room = MAX_SHOTS - shots.length;
-    const valid = Array.from(list)
-      .filter((f) => f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024)
+    const all = Array.from(list);
+    const valid = all
+      .filter((f) => ['image/png', 'image/jpeg'].includes(f.type) && f.size <= 10 * 1024 * 1024)
       .slice(0, room);
+    setUploadError(valid.length < Math.min(all.length, room) ? 'Only PNG or JPG images up to 10MB are accepted.' : '');
     setShots((prev) => [...prev, ...valid.map((f) => ({ file: f, url: URL.createObjectURL(f) }))]);
   };
 
@@ -156,7 +160,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                   </div>
                   <h3 className="font-bold text-sm truncate w-full" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{opponent.username}</h3>
                   <div className="flex items-center gap-1 text-[11px] text-purple-300 mt-1 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-800/50">
-                    Nigeria
+                    {opponent.country === 'GH' ? 'Ghana' : 'Nigeria'}
                   </div>
                   <p className="text-[10px] text-gray-400 font-mono mt-1.5">UID: {oppUid}</p>
                 </div>
@@ -165,7 +169,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
 
               <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-white/10 text-center">
                 <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Prize Pool</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Winner Receives</p>
                   <p className="text-sm font-black text-green-400 tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{money(winnings)}</p>
                 </div>
                 <div className="bg-white/5 rounded-2xl p-3 border border-white/5 col-span-2 order-first sm:col-span-1 sm:order-none">
@@ -228,7 +232,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                 </div>
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 border border-gray-100">
                   <span className="text-xs font-bold text-gray-500">Region</span>
-                  <span className="text-xs font-bold text-gray-900 flex items-center gap-1">🇳🇬 NG</span>
+                  <span className="text-xs font-bold text-gray-900 flex items-center gap-1">{opponent.country === 'GH' ? '🇬🇭 GH' : '🇳🇬 NG'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 border border-gray-100">
                   <span className="text-xs font-bold text-gray-500">Status</span>
@@ -303,6 +307,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                 </span>
               </div>
               
+              {uploadError && <p className="text-xs text-red-500 mb-3">{uploadError}</p>}
               {shots.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   {shots.map((s, i) => (

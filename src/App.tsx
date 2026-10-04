@@ -383,8 +383,8 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'login' && <Login onNavigate={onNavigate} />}
           {screen === 'create-account' && <CreateAccount onNavigate={onNavigate} onSignedUp={onSignedUp} />}
           {screen === 'dashboard' && <Dashboard onNavigate={onNavigate} balance={balance} locked={locked} unread={notifs.filter(n => !n.read).length} verified={verified} disputeActive={disputeActive} stats={stats} matchDraft={matchDraft} />}
-          {screen === 'create-match' && <CreateMatch onNavigate={onNavigate} onMatchCreated={onMatchCreated} onJoinCode={onJoinCode} />}
-          {screen === 'match-lobby' && <MatchLobby onNavigate={onNavigate} matchDraft={matchDraft} onLock={onLock} onNotify={onNotify} stats={stats} />}
+          {screen === 'create-match' && <CreateMatch onNavigate={onNavigate} onMatchCreated={onMatchCreated} onJoinCode={onJoinCode} balance={balance} />}
+          {screen === 'match-lobby' && <MatchLobby onNavigate={onNavigate} matchDraft={matchDraft} onLock={onLock} onNotify={onNotify} stats={stats} balance={balance} />}
           {screen === 'active-match' && <ActiveMatch onNavigate={onNavigate} matchDraft={matchDraft} onWin={onWin} onNotify={onNotify} onLose={onLose} />}
           {screen === 'dispute' && <Dispute onNavigate={onNavigate} matchDraft={matchDraft} onDisputeStatusChange={setDisputeActive} onWin={onWin} onLose={onLose} onNotify={onNotify} />}
           {screen === 'payout' && <Payout onNavigate={onNavigate} balance={balance} onWithdraw={onWithdraw} />}
@@ -707,7 +707,14 @@ function AppInner() {
 
   const { profile } = useProfile();
   useEffect(() => {
-    setBalance(fromGhs(2840, profile.currency));
+    try {
+      const savedCur = localStorage.getItem('proveit_balance_cur');
+      if (savedCur !== profile.currency) {
+        // Reset only the first time, or when the currency really changes
+        if (!(savedCur === null && saved.balance !== undefined)) setBalance(fromGhs(2840, profile.currency));
+        localStorage.setItem('proveit_balance_cur', profile.currency);
+      }
+    } catch {}
   }, [profile.currency]);
 
   const addNotif = (type: Notification['type'], title: string, body: string) => {

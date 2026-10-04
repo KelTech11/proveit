@@ -95,7 +95,7 @@ export const GAME_FIELDS: Record<GameType, { uidLabel: string; uidHint: string; 
   },
 };
 
-export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: { onNavigate: (s: string) => void; onMatchCreated: (d: MatchDraft) => void; onJoinCode: (code: string) => void }) {
+export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode, balance }: { onNavigate: (s: string) => void; onMatchCreated: (d: MatchDraft) => void; onJoinCode: (code: string) => void; balance: number }) {
   const { profile: wagerProfile } = useProfile();
   const WAGER_PRESETS = WAGER_PRESETS_GHS.map(p => fromGhs(p, wagerProfile.currency));
   const MIN_WAGER = fromGhs(MIN_WAGER_GHS, wagerProfile.currency);
@@ -110,6 +110,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   const [matchType, setMatchType] = useState<'open' | 'private'>('private');
   const [gameUid, setGameUid] = useState('');
   const [gameName, setGameName] = useState('');
+  const [tried3, setTried3] = useState(false);
   const [rules, setRules] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasShared, setHasShared] = useState(false);
@@ -148,7 +149,8 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   const fee = pot * PLATFORM_FEE;
   const winnerGets = pot - fee;
   const isScrim = activeMode === 'Scrim';
-  const canContinueWager = isScrim || (!!activeMode && wager >= MIN_WAGER);
+  const enoughBalance = balance >= wager;
+  const canContinueWager = isScrim || (!!activeMode && wager >= MIN_WAGER && enoughBalance);
   const money = (n: number) =>
     `${CURRENCY} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -162,7 +164,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
   const encodedMatch = selectedGame
     ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager, t: linkTime, c: profile.currency })))
     : inviteCode;
-  const inviteLink = `https://proveit-six.vercel.app/join/${encodedMatch}`;
+  const inviteLink = `${window.location.origin}/join/${encodedMatch}`;
   const inviteMessage = selectedGame
     ? `Yo! I'm challenging you to ${GAME_DETAILS[selectedGame].title} on ProveIt. ${money(wager)} each, winner takes the pot. This link works for 10 minutes: ${inviteLink}`
     : '';
@@ -545,20 +547,26 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                           wager === p ? 'border-[#16A34A] bg-green-50 text-[#16A34A]' : 'border-gray-200 text-gray-600 hover:border-gray-300'
                         }`}
                       >
-                        {p}
+                        {p.toLocaleString('en-US')}
                       </button>
                     ))}
                   </div>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="numeric"
-                    value={wager || ''}
-                    onChange={e => setWager(Math.max(0, Number(e.target.value)))}
+                    value={wager ? wager.toLocaleString('en-US') : ''}
+                    onChange={e => setWager(Number(e.target.value.replace(/\D/g, '').slice(0, 7)))}
                     placeholder={`Custom amount (min ${MIN_WAGER})`}
                     className="w-full sm:w-64 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-base sm:text-sm outline-none focus:border-[#16A34A] transition-colors"
                   />
                   {wager > 0 && wager < MIN_WAGER && (
                     <p className="text-xs text-red-500 mt-2">Minimum wager is {money(MIN_WAGER)}.</p>
+                  )}
+                  {wager >= MIN_WAGER && !enoughBalance && (
+                    <p className="text-xs text-red-500 mt-2">
+                      Your balance is {money(balance)}.{' '}
+                      <button onClick={() => onNavigate('deposit')} className="font-bold underline">Deposit funds</button> to play this wager.
+                    </p>
                   )}
 
                   <div className="mt-6 rounded-2xl bg-gray-50 border border-gray-100 p-4 space-y-2 text-sm">
@@ -634,8 +642,11 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                             onChange={e => setGameUid(selectedGame === 'CODM' ? e.target.value.replace(/\D/g, '') : e.target.value)}
                             inputMode={selectedGame === 'CODM' ? 'numeric' : 'text'}
                             placeholder="Enter your UID"
-                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-base sm:text-sm outline-none focus:border-[#16A34A] transition-colors"
+                            className={`w-full bg-white border rounded-xl px-4 py-2.5 text-base sm:text-sm outline-none focus:border-[#16A34A] transition-colors ${tried3 && gameUid.trim().length < MIN_UID_LENGTH ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
                           />
+                          {tried3 && gameUid.trim().length < MIN_UID_LENGTH && (
+                            <p className="text-xs text-red-500 mt-1">Enter your {GAME_DETAILS[selectedGame].title} UID (at least {MIN_UID_LENGTH} characters).</p>
+                          )}
                           <p className="text-[11px] text-gray-400 mt-1">{fields.uidHint}</p>
                         </div>
                         <div>
@@ -645,8 +656,11 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                             value={gameName}
                             onChange={e => setGameName(e.target.value)}
                             placeholder="Exactly as it shows in the game"
-                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-base sm:text-sm outline-none focus:border-[#16A34A] transition-colors"
+                            className={`w-full bg-white border rounded-xl px-4 py-2.5 text-base sm:text-sm outline-none focus:border-[#16A34A] transition-colors ${tried3 && gameName.trim().length < 2 ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
                           />
+                          {tried3 && gameName.trim().length < 2 && (
+                            <p className="text-xs text-red-500 mt-1">Enter your in-game username.</p>
+                          )}
                         </div>
                       </div>
                       <div className="mt-3">
@@ -677,10 +691,16 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
                       Go Back
                     </button>
                     <button
-                      disabled={!canCreate}
-                      onClick={() => setStep(4)}
+                      onClick={() => {
+                        if (!canCreate) {
+                          setTried3(true);
+                          setTimeout(() => (document.querySelector('.border-red-400') as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+                          return;
+                        }
+                        setStep(4);
+                      }}
                       className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white transition-all shadow-md ${
-                        canCreate ? 'bg-[#16A34A] hover:bg-[#15803d]' : 'bg-gray-300 cursor-not-allowed shadow-none'
+                        canCreate ? 'bg-[#16A34A] hover:bg-[#15803d]' : 'bg-gray-400 hover:bg-gray-500'
                       }`}
                     >
                       Create Private Match

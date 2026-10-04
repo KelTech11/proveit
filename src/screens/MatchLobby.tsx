@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ProfileAvatar as Avatar } from '../avatars';
-import { me, players, matches } from '../data';
+import { me, players, matches, opponentFor } from '../data';
 import { GAME_DETAILS, FEE_FREE_PERIOD, calcPayout, type MatchDraft } from './CreateMatch';
 import jokerBanner from '../assets/joker_white.jpg';
 
@@ -11,12 +11,15 @@ const DEFAULT_DRAFT: MatchDraft = { game: 'CODM', mode: '1v1', wager: 225, uid: 
 
 import { useProfile } from '../profile';
 
-export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, stats }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void; stats: { wins: number; losses: number; streak: number; xp: number } }) {
+export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, stats, balance }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void; stats: { wins: number; losses: number; streak: number; xp: number }; balance: number }) {
   const { profile: me } = useProfile();
+  const opponent = opponentFor(me.country);
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
   const pot = draft.wager * 2;
   const { winnings } = calcPayout(draft.wager);
+  const money = (n: number) => `${me.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const enoughBalance = balance >= draft.wager;
 
   const [started, setStarted] = useState(false);
   const [oppReady, setOppReady] = useState(false);
@@ -161,7 +164,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               <div className="relative z-10">
                 <div className="flex justify-center sm:justify-between items-start mb-2 sm:mb-6">
                   <span className="bg-[#3B82F6] text-white text-[7px] sm:text-[11px] font-black px-2 sm:px-4 py-0.5 sm:py-1.5 rounded-full tracking-widest shadow-sm">
-                    P1<span className="hidden sm:inline"> LAYER</span>
+                    <span className="sm:hidden">P1</span><span className="hidden sm:inline">PLAYER 1</span>
                   </span>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="#FBBF24" stroke="none" className="drop-shadow-sm hidden sm:block"><path d="M2 16l4-12 6 5 6-5 4 12z"/></svg>
                 </div>
@@ -223,7 +226,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
                     </div>
                     <div className="flex items-center gap-2">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                      Global / Regional
+                      {me.country === 'GH' ? 'Ghana players only' : 'Nigeria players only'}
                     </div>
                   </div>
                 </div>
@@ -244,7 +247,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
                 <div className="flex items-center justify-center gap-1 sm:gap-4">
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                   <p className="text-[12px] sm:text-[32px] font-black text-[#16A34A] tabular tracking-tighter drop-shadow-sm whitespace-nowrap" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    <span className="hidden sm:inline">{me.currency} </span>{Number.isInteger(pot) ? pot : pot.toFixed(2)}<span className="hidden sm:inline">{Number.isInteger(pot) ? '.00' : ''}</span>
+                    <span className="hidden sm:inline">{me.currency} </span>{Number.isInteger(pot) ? pot.toLocaleString('en-US') : pot.toFixed(2)}<span className="hidden sm:inline">{Number.isInteger(pot) ? '.00' : ''}</span>
                   </p>
                   <div className="h-[1px] sm:h-[2px] bg-[#16A34A] w-2 sm:w-6 opacity-30 rounded-full" />
                 </div>
@@ -297,7 +300,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               <div className="relative z-10">
                 <div className="flex justify-center sm:justify-between items-start mb-2 sm:mb-6">
                   <span className="bg-[#8B5CF6] text-white text-[7px] sm:text-[11px] font-black px-2 sm:px-4 py-0.5 sm:py-1.5 rounded-full tracking-widest shadow-sm">
-                    P2<span className="hidden sm:inline"> LAYER</span>
+                    <span className="sm:hidden">P2</span><span className="hidden sm:inline">PLAYER 2</span>
                   </span>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="#FBBF24" stroke="none" className="drop-shadow-sm hidden sm:block"><path d="M2 16l4-12 6 5 6-5 4 12z"/></svg>
                 </div>
@@ -313,7 +316,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
                     <p className="text-[#8B5CF6] text-xs sm:text-sm font-semibold mb-1 truncate w-full hidden sm:block">@{opponent.username}</p>
                     <p className="text-gray-500 text-xs flex items-center gap-1.5 font-medium hidden sm:flex">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      Nigeria
+                      {opponent.country === 'GH' ? 'Ghana' : 'Nigeria'}
                     </p>
                   </div>
                 </div>
@@ -386,10 +389,10 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
                     ? 'Funds locked in escrow. Starting match...'
                     : started
                       ? 'Waiting for opponent to press Start...'
-                      : `${me.currency} ${draft.wager.toFixed(2)} locks in escrow once both players press Start`}
+                      : `${money(draft.wager)} locks in escrow once both players press Start`}
                 </p>
                 <p className="text-[11px] sm:text-xs text-gray-600">
-                  Winner receives {me.currency} {winnings.toFixed(2)}. {FEE_FREE_PERIOD ? 'Platform fee waived, your first 7 days are fee-free.' : '10% platform fee applies.'} No cancelling once funds are locked.
+                  Winner receives {money(winnings)}. {FEE_FREE_PERIOD ? 'Platform fee waived, your first 7 days are fee-free.' : '10% platform fee applies.'} No cancelling once funds are locked.
                 </p>
               </div>
             </div>
@@ -399,6 +402,13 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               </div>
             )}
           </div>
+
+          {!enoughBalance && !started && (
+            <div className="border-t border-red-100 bg-red-50 px-4 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <p className="text-xs sm:text-sm font-bold text-red-700">Not enough balance to start. You need {money(draft.wager)}.</p>
+              <button onClick={() => onNavigate('deposit')} className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold">Deposit funds</button>
+            </div>
+          )}
 
           {/* BOTTOM ACTION BAR */}
           <div className="border-t border-gray-200 bg-white p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
@@ -451,7 +461,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               </button>
               <button
                 onClick={() => setStarted(true)}
-                disabled={started}
+                disabled={started || !enoughBalance}
                 className="flex-1 md:flex-none px-4 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-xs sm:text-sm transition-transform hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(22,163,74,0.3)] flex items-center justify-center gap-1.5 sm:gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 style={{ fontFamily: 'Chakra Petch, sans-serif' }}
               >

@@ -1,5 +1,5 @@
 import { Avatar } from '../components/ui';
-import { me, players, matches, formatCurrency } from '../data';
+import { me, players, matches, formatCurrency, opponentFor } from '../data';
 import { GAME_DETAILS, type MatchDraft } from './CreateMatch';
 
 // Custom clean game icons to prevent black boxes
@@ -37,7 +37,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
     return `${me.currency} ${t}`;
   };
   const liveBattle = matchDraft && locked > 0
-    ? { draft: matchDraft, game: GAME_DETAILS[matchDraft.game], opponent: players[1] }
+    ? { draft: matchDraft, game: GAME_DETAILS[matchDraft.game], opponent: opponentFor(me.country) }
     : null;
   const winCount = stats.wins; 
   const totalPlayed = stats.wins + stats.losses;
