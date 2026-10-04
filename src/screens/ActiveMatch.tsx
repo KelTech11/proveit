@@ -41,6 +41,12 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
   const ss = String(secondsLeft % 60).padStart(2, '0');
   const timeUp = secondsLeft === 0;
 
+  const [startedAt] = useState(() => new Date());
+  const startedLabel = startedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const elapsed = MATCH_WINDOW_SECONDS - secondsLeft;
+  const elapsedLabel = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
+  const [oppUid] = useState(() => `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`);
+
   const isDisputed = myClaim === 'won' && opponentClaim === 'won';
 
   const handleFiles = (list: FileList | null | undefined) => {
@@ -151,7 +157,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                   <div className="flex items-center gap-1 text-[11px] text-purple-300 mt-1 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-800/50">
                     Nigeria
                   </div>
-                  <p className="text-[10px] text-gray-400 font-mono mt-1.5">UID: 5537-1182</p>
+                  <p className="text-[10px] text-gray-400 font-mono mt-1.5">UID: {oppUid}</p>
                 </div>
 
               </div>
@@ -162,11 +168,8 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                   <p className="text-sm font-black text-green-400 tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{money(winnings)}</p>
                 </div>
                 <div className="bg-white/5 rounded-2xl p-3 border border-white/5 col-span-2 order-first sm:col-span-1 sm:order-none">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Performance</p>
-                  <p className="text-sm font-black text-white tabular flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    <span>1 Win / 2 Played</span>
-                    <span className="text-[10px] bg-green-600 px-1.5 py-0.5 rounded text-white">50%</span>
-                  </p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Your Stake</p>
+                  <p className="text-sm font-black text-white tabular truncate" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{money(draft.wager)}</p>
                 </div>
                 <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Game Mode</p>
@@ -418,7 +421,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                     <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs shrink-0"><IconCheck size={12} /></div>
                     <span className="text-xs font-bold text-gray-900">Match Started</span>
                   </div>
-                  <span className="text-[10px] text-gray-400 font-bold">00:12</span>
+                  <span className="text-[10px] text-gray-400 font-bold">{startedLabel}</span>
                 </div>
 
                 <div className="flex items-center justify-between relative z-10">
@@ -426,7 +429,7 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
                     <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs shrink-0"><IconCheck size={12} /></div>
                     <span className="text-xs font-bold text-gray-900">Game in Progress</span>
                   </div>
-                  <span className="text-[10px] text-gray-400 font-bold">00:05:22</span>
+                  <span className="text-[10px] text-gray-400 font-bold">{elapsedLabel}</span>
                 </div>
 
                 <div className={`flex items-center justify-between relative z-10 ${uploaded ? '' : 'opacity-40'}`}>

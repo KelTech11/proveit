@@ -83,7 +83,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#115E59] rounded-full blur-2xl opacity-50"></div>
               <h3 className="font-black text-xl mb-1 leading-tight tracking-tight relative z-10">Play.<br/>Compete.<br/>Win.</h3>
               <p className="text-[10px] text-gray-300 font-medium mb-4 relative z-10">Skill-based gaming.<br/>Real players. Real rewards.</p>
-              <button className="w-8 h-8 rounded-full bg-[#16A34A] hover:bg-[#15803d] flex items-center justify-center transition-colors relative z-10 shadow-md">
+              <button onClick={() => onNavigate('create-match')} className="w-8 h-8 rounded-full bg-[#16A34A] hover:bg-[#15803d] flex items-center justify-center transition-colors relative z-10 shadow-md">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
             </div>
@@ -288,9 +288,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <h3 className="text-base font-black text-gray-900 flex items-center gap-2" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                     <span className="text-red-500">🔥</span> Trending Live Lobbies
                   </h3>
-                  <button className="text-xs font-bold text-[#16A34A] hover:underline flex items-center gap-1">
-                    View all <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </button>
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 px-2 py-0.5 rounded">Soon</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,8 +320,8 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
 
                     <div className="flex items-center justify-between">
                       <span className="text-base font-black text-gray-900">GHS 450.00</span>
-                      <button onClick={() => onNavigate('join')} className="px-5 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803d] text-white text-[11px] font-bold uppercase tracking-wider transition-colors">
-                        Join
+                      <button disabled className="px-4 py-1.5 rounded-lg bg-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
+                        Coming Soon
                       </button>
                     </div>
                   </div>
@@ -355,8 +353,8 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
 
                     <div className="flex items-center justify-between">
                       <span className="text-base font-black text-gray-900">GHS 300.00</span>
-                      <button className="px-5 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803d] text-white text-[11px] font-bold uppercase tracking-wider transition-colors">
-                        Join
+                      <button disabled className="px-4 py-1.5 rounded-lg bg-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
+                        Coming Soon
                       </button>
                     </div>
                   </div>
@@ -414,9 +412,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <h3 className="text-base font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                     My Active Battles
                   </h3>
-                  <button className="text-xs font-bold text-[#16A34A] hover:underline flex items-center gap-1">
-                    See all <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </button>
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 px-2 py-0.5 rounded">Soon</span>
                 </div>
 
                 <div className="space-y-4">
@@ -485,9 +481,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                     </h3>
                     <p className="text-[11px] text-gray-500 font-semibold relative z-10">Big prizes. Real players.</p>
                   </div>
-                  <button className="text-[11px] font-bold text-[#16A34A] hover:underline flex items-center gap-1 w-fit mt-4 relative z-10">
-                    View tournaments <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </button>
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 px-2 py-0.5 rounded w-fit mt-4 relative z-10">Soon</span>
                   
                   {/* Floating Trophy Graphic for detail */}
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-green-50 rounded-full flex items-center justify-center border border-green-100 z-10">
