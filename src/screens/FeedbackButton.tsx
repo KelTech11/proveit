@@ -1,8 +1,7 @@
 import { useState } from 'react';
 
-// Replace with your WhatsApp number: country code + number, digits only (no + or spaces)
-// Example for Ghana: '233201234567'
-const FEEDBACK_WHATSAPP = '233205893669';
+// Free access key from https://web3forms.com (emailed to you). Safe to keep in public code.
+const WEB3FORMS_KEY = '34040a14-fc86-4d28-9cb7-16b662648459';
 
 const TYPES = [
   { id: 'Bug', emoji: '🐞' },
@@ -18,24 +17,49 @@ export default function FeedbackButton({ screen }: { screen: string }) {
   const [type, setType] = useState('Idea');
   const [text, setText] = useState('');
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   if (screen.startsWith('admin-')) return null;
 
-  const numberSet = /^\d{8,15}$/.test(FEEDBACK_WHATSAPP);
+  const keySet = /^[0-9a-f-]{20,}$/i.test(WEB3FORMS_KEY);
   const compact = screen === 'match-lobby' || screen === 'active-match';
-  const canSend = numberSet && text.trim().length >= 3;
+  const canSend = keySet && text.trim().length >= 3 && !sending;
 
-  const send = () => {
+  const send = async () => {
     if (!canSend) return;
-    const msg = `ProveIt feedback\nType: ${type}\nScreen: ${prettyScreen(screen)}\n\n${text.trim()}`;
-    window.open(`https://wa.me/${FEEDBACK_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
-    setSent(true);
-    setText('');
+    setSending(true);
+    setFailed(false);
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `ProveIt feedback: ${type} (${prettyScreen(screen)})`,
+          from_name: 'ProveIt Feedback',
+          type,
+          screen: prettyScreen(screen),
+          message: text.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+        setText('');
+      } else {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    }
+    setSending(false);
   };
 
   const close = () => {
     setOpen(false);
     setSent(false);
+    setFailed(false);
   };
 
   return (
@@ -68,7 +92,7 @@ export default function FeedbackButton({ screen }: { screen: string }) {
                 <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                   Send feedback
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">Tell us what's broken, confusing, or missing. It goes straight to the team on WhatsApp.</p>
+                <p className="text-sm text-gray-500 mt-1">Tell us what's broken, confusing, or missing. It goes straight to the team.</p>
               </div>
               <button onClick={close} aria-label="Close" className="text-gray-400 hover:text-gray-700 text-lg leading-none ml-3">
                 ✕
@@ -78,8 +102,8 @@ export default function FeedbackButton({ screen }: { screen: string }) {
             {sent ? (
               <div className="text-center py-4">
                 <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3 text-2xl">💬</div>
-                <p className="text-sm font-black text-gray-900 mb-1">WhatsApp should have opened</p>
-                <p className="text-xs text-gray-500 mb-5">Press Send in WhatsApp to deliver your feedback. Thank you for helping us improve ProveIt.</p>
+                <p className="text-sm font-black text-gray-900 mb-1">Feedback sent</p>
+                <p className="text-xs text-gray-500 mb-5">Thank you for helping us improve ProveIt.</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSent(false)}
@@ -121,8 +145,11 @@ export default function FeedbackButton({ screen }: { screen: string }) {
                 />
                 <p className="text-[11px] text-gray-400 mt-1">We'll include the screen you're on: {prettyScreen(screen)}.</p>
 
-                {!numberSet && (
-                  <p className="text-[11px] text-red-500 mt-2">Feedback number isn't set yet.</p>
+                {!keySet && (
+                  <p className="text-[11px] text-red-500 mt-2">Feedback isn't set up yet.</p>
+                )}
+                {failed && (
+                  <p className="text-[11px] text-red-500 mt-2">Couldn't send. Check your connection and try again.</p>
                 )}
 
                 <button
@@ -133,7 +160,7 @@ export default function FeedbackButton({ screen }: { screen: string }) {
                   }`}
                   style={{ fontFamily: 'Chakra Petch, sans-serif' }}
                 >
-                  Send via WhatsApp
+                  {sending ? 'Sending...' : 'Send feedback'}
                 </button>
               </>
             )}
