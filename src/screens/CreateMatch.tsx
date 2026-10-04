@@ -157,7 +157,7 @@ export default function CreateMatch({ onNavigate, onMatchCreated, onJoinCode }: 
     if (step === 4) setLinkTime(Date.now());
   }, [step]);
   const encodedMatch = selectedGame
-    ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager, t: linkTime })))
+    ? encodeURIComponent(btoa(JSON.stringify({ g: selectedGame, m: activeMode, w: wager, t: linkTime, c: profile.currency })))
     : inviteCode;
   const inviteLink = `https://proveit-six.vercel.app/join/${encodedMatch}`;
   const inviteMessage = selectedGame

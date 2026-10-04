@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
-  Avatar,
   IconAlertTriangle,
   IconCheck,
   IconShield,
   IconClock,
 } from '../components/ui';
-import { me } from '../data';
+import { ProfileAvatar as Avatar } from '../avatars';
 import { GAME_DETAILS, DEFAULT_DRAFT, type MatchDraft } from './CreateMatch';
 import { useProfile } from '../profile';
 import { fromGhs } from '../currency';
@@ -17,6 +16,7 @@ type DisputeStage = 'opened' | 'evidence' | 'review' | 'resolved';
 
 export default function Dispute({ onNavigate, matchDraft, onDisputeStatusChange }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onDisputeStatusChange: (active: boolean) => void }) {
   const { profile } = useProfile();
+  const me = profile;
   const draft = matchDraft ?? { ...DEFAULT_DRAFT, wager: fromGhs(DEFAULT_DRAFT.wager, profile.currency) };
   const game = GAME_DETAILS[draft.game];
 
