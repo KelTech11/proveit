@@ -481,7 +481,7 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
         />
         {(error || lockedFor > 0) && (
           <p className="text-xs text-red-500 mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-            {lockedFor > 0 ? `Too many attempts. Try again in ${lockedFor}s.` : error}
+            {lockedFor > 0 ? `Ei, you don try pass 😂 Rest small, try again in ${lockedFor}s` : error}
           </p>
         )}
         <button
