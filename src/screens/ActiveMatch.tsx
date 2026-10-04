@@ -34,12 +34,13 @@ export default function ActiveMatch({ onNavigate, matchDraft, onWin, onNotify, o
 
   const [secondsLeft, setSecondsLeft] = useState(MATCH_WINDOW_SECONDS);
   useEffect(() => {
-    const t = setInterval(() => setSecondsLeft(s => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() => setSecondsLeft(s => s - 1), 1000);
     return () => clearInterval(t);
   }, []);
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
-  const ss = String(secondsLeft % 60).padStart(2, '0');
-  const timeUp = secondsLeft === 0;
+  const absSeconds = Math.abs(secondsLeft);
+  const mm = String(Math.floor(absSeconds / 60)).padStart(2, '0');
+  const ss = String(absSeconds % 60).padStart(2, '0');
+  const timeUp = secondsLeft <= 0;
 
   const [startedAt] = useState(() => new Date());
   const startedLabel = startedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

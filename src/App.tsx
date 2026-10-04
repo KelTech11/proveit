@@ -378,7 +378,7 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
           {screen === 'home' && <Home onNavigate={onNavigate} />}
           {screen === 'login' && <Login onNavigate={onNavigate} />}
           {screen === 'create-account' && <CreateAccount onNavigate={onNavigate} onSignedUp={onSignedUp} />}
-          {screen === 'dashboard' && <Dashboard onNavigate={onNavigate} balance={balance} locked={locked} unread={notifs.filter(n => !n.read).length} verified={verified} disputeActive={disputeActive} stats={stats} />}
+          {screen === 'dashboard' && <Dashboard onNavigate={onNavigate} balance={balance} locked={locked} unread={notifs.filter(n => !n.read).length} verified={verified} disputeActive={disputeActive} stats={stats} matchDraft={matchDraft} />}
           {screen === 'create-match' && <CreateMatch onNavigate={onNavigate} onMatchCreated={onMatchCreated} onJoinCode={onJoinCode} />}
           {screen === 'match-lobby' && <MatchLobby onNavigate={onNavigate} matchDraft={matchDraft} onLock={onLock} onNotify={onNotify} stats={stats} />}
           {screen === 'active-match' && <ActiveMatch onNavigate={onNavigate} matchDraft={matchDraft} onWin={onWin} onNotify={onNotify} onLose={onLose} />}

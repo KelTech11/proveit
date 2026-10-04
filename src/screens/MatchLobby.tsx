@@ -187,8 +187,8 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               <div className="relative z-10 flex flex-col items-center sm:items-start gap-1.5 sm:gap-4 mt-auto">
                 <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 text-[#F59E0B]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-5 sm:h-5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-                  <span className="font-bold text-[10px] sm:text-[18px] tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>2,340</span>
-                  <span className="bg-gray-100 text-gray-500 text-[7px] sm:text-[10px] font-black px-1 sm:px-2 py-0.5 rounded ml-0.5 sm:ml-1">GH</span>
+                  <span className="font-bold text-[10px] sm:text-[18px] tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{(1000 + stats.xp).toLocaleString('en-US')}</span>
+                  <span className="bg-gray-100 text-gray-500 text-[7px] sm:text-[10px] font-black px-1 sm:px-2 py-0.5 rounded ml-0.5 sm:ml-1">{me.country}</span>
                 </div>
 
                 <div className={`inline-flex items-center justify-center gap-1 sm:gap-2 ${started ? 'bg-green-50/80 border border-green-200/60 text-[#16A34A]' : 'bg-amber-50/80 border border-amber-200/60 text-[#D97706]'} text-[7px] sm:text-[11px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full w-full sm:w-fit tracking-widest uppercase`}>
@@ -322,8 +322,8 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
               <div className="relative z-10 flex flex-col items-center sm:items-start gap-1.5 sm:gap-4 mt-auto">
                 <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 text-[#F59E0B]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="sm:w-5 sm:h-5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-                  <span className="font-bold text-[10px] sm:text-[18px] tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>2,180</span>
-                  <span className="bg-gray-100 text-gray-500 text-[7px] sm:text-[10px] font-black px-1 sm:px-2 py-0.5 rounded ml-0.5 sm:ml-1">NG</span>
+                  <span className="font-bold text-[10px] sm:text-[18px] tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{opponent.rating.toLocaleString('en-US')}</span>
+                  <span className="bg-gray-100 text-gray-500 text-[7px] sm:text-[10px] font-black px-1 sm:px-2 py-0.5 rounded ml-0.5 sm:ml-1">{opponent.country}</span>
                 </div>
 
                 <div className={`inline-flex items-center justify-center gap-1 sm:gap-2 ${oppReady ? 'bg-green-50/80 border border-green-200/60 text-[#16A34A]' : 'bg-amber-50/80 border border-amber-200/60 text-[#D97706]'} text-[7px] sm:text-[11px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full w-full sm:w-fit tracking-widest uppercase`}>

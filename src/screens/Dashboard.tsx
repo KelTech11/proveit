@@ -1,5 +1,6 @@
 import { Avatar } from '../components/ui';
-import { me, matches, formatCurrency } from '../data';
+import { me, players, matches, formatCurrency } from '../data';
+import { GAME_DETAILS, type MatchDraft } from './CreateMatch';
 
 // Custom clean game icons to prevent black boxes
 const GameIcon = ({ game }: { game: string }) => {
@@ -25,8 +26,11 @@ const GameIcon = ({ game }: { game: string }) => {
 
 import { useProfile } from '../profile';
 
-export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number } }) {
+export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats, matchDraft }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number }; matchDraft: MatchDraft | null }) {
   const { profile: me } = useProfile();
+  const liveBattle = matchDraft && locked > 0
+    ? { draft: matchDraft, game: GAME_DETAILS[matchDraft.game], opponent: players[1] }
+    : null;
   const winCount = stats.wins; 
   const totalPlayed = stats.wins + stats.losses;
   const winRate = totalPlayed ? Math.round((winCount / totalPlayed) * 100) : 0;
@@ -412,46 +416,47 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                   <h3 className="text-base font-black text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                     My Active Battles
                   </h3>
-                  <span className="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 px-2 py-0.5 rounded">Soon</span>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Battle 1 */}
-                  <div className="flex items-center justify-between pb-4 border-b border-gray-50 cursor-pointer group">
+                {liveBattle ? (
+                  <div
+                    onClick={() => onNavigate(disputeActive ? 'dispute' : 'active-match')}
+                    className="flex items-center justify-between cursor-pointer group"
+                  >
                     <div className="flex items-center gap-3">
-                      <GameIcon game="Call of Duty: Mobile" />
+                      <div className="w-12 h-12 rounded-xl shrink-0 shadow-sm border border-gray-100 overflow-hidden bg-black">
+                        <img src={liveBattle.game.coverUrl} alt={liveBattle.game.title} className="w-full h-full object-cover" />
+                      </div>
                       <div>
-                        <p className="text-xs font-black text-gray-900 group-hover:text-[#16A34A] transition-colors">CODM</p>
-                        <p className="text-sm font-black text-gray-900">vs EmkaBeast</p>
-                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">1v1 • Killhouse</p>
+                        <p className="text-xs font-black text-gray-900 group-hover:text-[#16A34A] transition-colors">{liveBattle.game.title}</p>
+                        <p className="text-sm font-black text-gray-900">vs {liveBattle.opponent.username}</p>
+                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{liveBattle.draft.mode}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-flex text-[9px] font-black uppercase tracking-widest text-[#16A34A] mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse mr-1 mt-0.5"></span> Live
-                      </span>
-                      <p className="text-sm font-black text-gray-900">GHS 450.00</p>
+                      {disputeActive ? (
+                        <span className="inline-flex text-[9px] font-black uppercase tracking-widest text-red-500 mb-1">In dispute</span>
+                      ) : (
+                        <span className="inline-flex text-[9px] font-black uppercase tracking-widest text-[#16A34A] mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse mr-1 mt-0.5"></span> Live
+                        </span>
+                      )}
+                      <p className="text-sm font-black text-gray-900">{me.currency} {liveBattle.draft.wager.toFixed(2)}</p>
                     </div>
                   </div>
-
-                  {/* Battle 2 */}
-                  <div className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center gap-3">
-                      <GameIcon game="FC Mobile" />
-                      <div>
-                        <p className="text-xs font-black text-gray-900 group-hover:text-[#16A34A] transition-colors">FC Mobile</p>
-                        <p className="text-sm font-black text-gray-900">vs TundeSniper</p>
-                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">1v1 • H2H</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-flex text-[9px] font-black uppercase tracking-widest text-amber-500 mb-1">
-                        Pending
-                      </span>
-                      <p className="text-sm font-black text-gray-900">GHS 250.00</p>
-                    </div>
+                ) : (
+                  <div className="flex flex-col items-center text-center py-6">
+                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-2xl mb-3">🎮</div>
+                    <p className="text-sm font-black text-gray-900 mb-1">No active battles</p>
+                    <p className="text-xs text-gray-500 mb-4">Start a match and it will show up here while it's live.</p>
+                    <button
+                      onClick={() => onNavigate('create-match')}
+                      className="px-5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white text-xs font-bold transition-colors"
+                    >
+                      Create Match
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* QUICK ACTION & TOURNAMENTS (Spans 4 cols) */}
