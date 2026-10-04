@@ -454,7 +454,7 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
       setLockedFor(30);
     } else {
       setFails(n);
-      setError(`Incorrect access code. ${5 - n} ${5 - n === 1 ? 'try' : 'tries'} left.`);
+      setError(`Ei you get heart oo😂💔. ${5 - n} ${5 - n === 1 ? 'try' : 'tries'} left wai`);
     }
   };
 
@@ -464,7 +464,7 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
         <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
         <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Admin access</h1>
         <p className="text-sm text-gray-500 mb-5" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Enter the access code to open the admin console.
+          Kwasia…You be admin?😂…Enter code make asee err😂💔
         </p>
         <input
           type="password"
