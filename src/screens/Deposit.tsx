@@ -8,7 +8,7 @@ import {
   IconCheck,
   IconArrowRight,
 } from '../components/ui';
-import { me } from '../data';
+import { useProfile } from '../profile';
 
 type Method = 'mobile' | 'paystack' | null;
 type MobileNetwork = 'mtn' | 'telecel' | 'airteltigo';
@@ -26,14 +26,21 @@ const MOBILE_NETWORKS = {
   ],
 };
 
-const CURRENCY_LABEL = me.currency;
-const COUNTRY = me.country;
 const MIN_DEPOSIT = 10;
 
+const cleanAmount = (v: string) => {
+  const s = v.replace(/[^\d.]/g, '');
+  const [whole, ...rest] = s.split('.');
+  return rest.length ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
+};
+
 export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate: (s: string) => void; balance: number; onDeposit: (amount: number) => void }) {
+  const { profile: me } = useProfile();
+  const CURRENCY_LABEL = me.currency;
+  const COUNTRY = me.country;
   const [method, setMethod] = useState<Method>(null);
   const [network, setNetwork] = useState<MobileNetwork>('mtn');
-  const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, ''));
+  const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, '').replace(/\D/g, '').replace(/^0+/, ''));
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -45,7 +52,11 @@ export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate
 
   const amountNum = parseFloat(amount) || 0;
   const belowMin = amountNum > 0 && amountNum < MIN_DEPOSIT;
-  const canDeposit = amountNum >= MIN_DEPOSIT && !!method && !processing;
+  const phoneLen = COUNTRY === 'GH' ? 9 : 10;
+  const phoneDigits = phone.replace(/\D/g, '');
+  const phoneValid = phoneDigits.length === phoneLen && (COUNTRY === 'GH' ? /^[25]/ : /^[789]/).test(phoneDigits);
+  const showPhoneError = method === 'mobile' && phone.length > 0 && !phoneValid;
+  const canDeposit = amountNum >= MIN_DEPOSIT && !!method && !processing && (method !== 'mobile' || phoneValid);
   const money = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   function handleDeposit() {
@@ -157,8 +168,11 @@ export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate
             </div>
             <Input
               label="Phone Number"
+              type="tel"
               value={phone}
-              onChange={setPhone}
+              onChange={v => setPhone(v.replace(/\D/g, '').replace(/^0+/, '').slice(0, phoneLen))}
+              autoComplete="tel-national"
+              error={showPhoneError ? (COUNTRY === 'GH' ? 'Enter 9 digits after +233, starting with 2 or 5' : 'Enter 10 digits after +234, starting with 7, 8 or 9') : undefined}
               prefix={
                 <span className="text-sm text-gray-500 font-medium" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                   {COUNTRY === 'GH' ? '+233' : '+234'}
@@ -181,9 +195,10 @@ export default function Deposit({ onNavigate, balance, onDeposit }: { onNavigate
           <Card className="p-4 flex flex-col gap-4 animate-fade-up">
             <Input
               label={`Amount (${CURRENCY_LABEL})`}
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
-              onChange={setAmount}
+              onChange={v => setAmount(cleanAmount(v))}
               placeholder="0.00"
               prefix={
                 <span className="text-sm font-semibold text-gray-700 tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>

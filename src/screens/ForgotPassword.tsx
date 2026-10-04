@@ -8,7 +8,14 @@ const MIN_PASSWORD = 8;
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const phoneDigits = (v: string) => v.replace(/\D/g, '');
-const isPhone = (v: string) => !v.includes('@') && phoneDigits(v).length >= 9;
+const isPhone = (v: string) => {
+  if (v.includes('@')) return false;
+  let d = phoneDigits(v);
+  if (d.length === 12 && d.startsWith('233')) d = d.slice(3);
+  else if (d.length === 13 && d.startsWith('234')) d = d.slice(3);
+  else d = d.replace(/^0/, '');
+  return /^[25]\d{8}$/.test(d) || /^[789]\d{9}$/.test(d);
+};
 
 const maskEmail = (v: string) => {
   const [name, domain] = v.trim().split('@');
@@ -30,7 +37,7 @@ export default function ForgotPassword({ onClose, initialValue = '' }: { onClose
   const viaEmail = identifier.includes('@');
   const validIdentifier = isEmail(identifier) || isPhone(identifier);
   const codeFull = code.every(d => d !== '');
-  const pwLongEnough = password.length >= MIN_PASSWORD;
+  const pwLongEnough = password.length >= MIN_PASSWORD && /[A-Za-z]/.test(password) && /\d/.test(password);
   const pwMatch = password === confirm;
   const pwOk = pwLongEnough && pwMatch;
 
@@ -213,7 +220,7 @@ export default function ForgotPassword({ onClose, initialValue = '' }: { onClose
             <h2 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
               Create new password
             </h2>
-            <p className="text-sm text-gray-500 mb-5">Use at least {MIN_PASSWORD} characters.</p>
+            <p className="text-sm text-gray-500 mb-5">Use at least {MIN_PASSWORD} characters, with a letter and a number.</p>
 
             <label className="block text-xs font-bold text-gray-700 mb-1">New password</label>
             <input
@@ -224,7 +231,7 @@ export default function ForgotPassword({ onClose, initialValue = '' }: { onClose
               className={inputClass}
             />
             {password && !pwLongEnough && (
-              <p className="text-xs text-red-500 mt-1">At least {MIN_PASSWORD} characters.</p>
+              <p className="text-xs text-red-500 mt-1">At least {MIN_PASSWORD} characters, with a letter and a number.</p>
             )}
 
             <label className="block text-xs font-bold text-gray-700 mb-1 mt-3">Confirm password</label>

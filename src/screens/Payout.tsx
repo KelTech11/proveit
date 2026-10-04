@@ -35,6 +35,17 @@ const BANK_LABELS: Record<string, string> = {
 const WITHDRAWAL_FEE = 1;
 const MIN_WITHDRAWAL = 20;
 
+const cleanAmount = (v: string) => {
+  const s = v.replace(/[^\d.]/g, '');
+  const [whole, ...rest] = s.split('.');
+  return rest.length ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
+};
+
+const BANKS: Record<string, string[]> = {
+  GH: ['GCB Bank', 'Ecobank Ghana', 'Fidelity Bank', 'Stanbic Bank', 'Absa Bank Ghana', 'Zenith Bank', 'CalBank', 'Access Bank', 'Republic Bank', 'Standard Chartered', 'United Bank for Africa', 'Societe Generale', 'Agricultural Development Bank', 'Prudential Bank'],
+  NG: ['Access Bank', 'GTBank', 'Zenith Bank', 'First Bank', 'UBA', 'Stanbic IBTC', 'Fidelity Bank', 'FCMB', 'Sterling Bank', 'Union Bank', 'Wema Bank', 'Polaris Bank', 'Ecobank Nigeria', 'Kuda', 'Moniepoint', 'OPay'],
+};
+
 import { useProfile } from '../profile';
 
 export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate: (s: string) => void; balance: number; onWithdraw: (amount: number) => void }) {
@@ -43,7 +54,7 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
   const COUNTRY = me.country;
   const [method, setMethod] = useState<Method>(null);
   const [network, setNetwork] = useState<MobileNetwork>('mtn');
-  const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, ''));
+  const [phone, setPhone] = useState(me.phone.replace(/^\+\d+\s/, '').replace(/\D/g, '').replace(/^0+/, ''));
   const [amount, setAmount] = useState('');
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -58,7 +69,13 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
   const overBalance = amountNum > balance;
   const receive = Math.max(0, amountNum - WITHDRAWAL_FEE);
   const money = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const canWithdraw = amountNum >= MIN_WITHDRAWAL && !overBalance;
+  const phoneLen = COUNTRY === 'GH' ? 9 : 10;
+  const phoneDigits = phone.replace(/\D/g, '');
+  const phoneValid = phoneDigits.length === phoneLen && (COUNTRY === 'GH' ? /^[25]/ : /^[789]/).test(phoneDigits);
+  const accLen = COUNTRY === 'NG' ? [10, 10] : [10, 16];
+  const accountValid = accountNumber.length >= accLen[0] && accountNumber.length <= accLen[1];
+  const detailsValid = method === 'mobile' ? phoneValid : !!bankName && accountValid;
+  const canWithdraw = amountNum >= MIN_WITHDRAWAL && !overBalance && !!method && detailsValid;
 
   function handleWithdraw() {
     if (!canWithdraw) return;
@@ -195,8 +212,11 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
 
             <Input
               label="Phone Number"
+              type="tel"
               value={phone}
-              onChange={setPhone}
+              onChange={v => setPhone(v.replace(/\D/g, '').replace(/^0+/, '').slice(0, phoneLen))}
+              autoComplete="tel-national"
+              error={phone.length > 0 && !phoneValid ? (COUNTRY === 'GH' ? 'Enter 9 digits after +233, starting with 2 or 5' : 'Enter 10 digits after +234, starting with 7, 8 or 9') : undefined}
               prefix={
                 <span className="text-sm text-gray-500 font-medium" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                   {COUNTRY === 'GH' ? '+233' : '+234'}
@@ -206,9 +226,10 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
 
             <Input
               label={`Amount (${CURRENCY_LABEL})`}
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amount}
-              onChange={setAmount}
+              onChange={v => setAmount(cleanAmount(v))}
               placeholder="0.00"
               prefix={
                 <span className="text-sm font-semibold text-gray-700 tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
@@ -231,18 +252,27 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
         {/* Bank Transfer Form */}
         {method === 'bank' && (
           <Card className="p-4 flex flex-col gap-4 animate-fade-up">
-            <Input
-              label="Bank Name"
-              value={bankName}
-              onChange={setBankName}
-              placeholder="Select your bank"
-            />
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1.5 block" style={{ fontFamily: 'Inter, sans-serif' }}>Bank Name</label>
+              <select
+                value={bankName}
+                onChange={e => setBankName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-base focus:border-green-500 focus:outline-none"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                <option value="">Select your bank</option>
+                {BANKS[COUNTRY].map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
             <Input
               label="Account Number"
               value={accountNumber}
-              onChange={setAccountNumber}
+              onChange={v => setAccountNumber(v.replace(/\D/g, '').slice(0, accLen[1]))}
               placeholder="0000000000"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              error={accountNumber.length > 0 && !accountValid ? (COUNTRY === 'NG' ? 'Nigerian account numbers are 10 digits' : 'Enter a valid account number (10 to 16 digits)') : undefined}
             />
             <Input
               label="Account Name"
@@ -310,7 +340,7 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
             fullWidth
             className="glow-green animate-fade-up"
             onClick={handleWithdraw}
-            disabled={!amount}
+            disabled={!canWithdraw}
           >
             Withdraw Funds
             <IconArrowRight size={16} />
@@ -345,7 +375,10 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
                 className="text-4xl font-bold text-green-600 tabular mt-1"
                 style={{ fontFamily: 'Chakra Petch, sans-serif' }}
               >
-                {CURRENCY_LABEL} {amount ? parseFloat(amount).toFixed(2) : '0.00'}
+                {CURRENCY_LABEL} {money(receive)}
+              </p>
+              <p className="text-xs text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
+                after the {CURRENCY_LABEL} {WITHDRAWAL_FEE.toFixed(2)} withdrawal fee
               </p>
               <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                 To:{' '}
@@ -384,7 +417,7 @@ export default function Payout({ onNavigate, balance, onWithdraw }: { onNavigate
                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Arrives within 5 minutes
+              {method === 'mobile' ? 'Arrives within 5 minutes' : 'Arrives in 1 to 3 business days'}
             </div>
 
             <Button
