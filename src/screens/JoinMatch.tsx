@@ -23,6 +23,7 @@ function decodeMatchCode(raw: string): { game: GameType; mode: string; wager: nu
 }
 
 import { useProfile } from '../profile';
+import { fromGhs, toGhs } from '../currency';
 
 export default function JoinMatch({
   onNavigate,
@@ -34,7 +35,20 @@ export default function JoinMatch({
   onJoined: (d: MatchDraft) => void;
 }) {
   const { profile } = useProfile();
-  const match = decodeMatchCode(code);
+  const decoded = decodeMatchCode(code);
+  let hostCurrency: string = profile.currency;
+  try {
+    const cleaned = code.trim().split('/').filter(Boolean).pop() || '';
+    hostCurrency = String(JSON.parse(atob(decodeURIComponent(cleaned))).c || profile.currency);
+  } catch {}
+  // Same currency: exact amount. Different currency: convert through cedis.
+  const match = {
+    ...decoded,
+    wager:
+      hostCurrency === profile.currency
+        ? decoded.wager
+        : Math.round(fromGhs(toGhs(decoded.wager, hostCurrency), profile.currency) * 100) / 100,
+  };
   const [uid, setUid] = useState(profile.linkedGames[match.game] ?? '');
   const [name, setName] = useState('');
 
@@ -80,32 +94,7 @@ export default function JoinMatch({
       </div>
     );
   }
-  let linkCurrency = '';
-  try {
-    const cleaned = code.trim().split('/').filter(Boolean).pop() || '';
-    linkCurrency = String(JSON.parse(atob(decodeURIComponent(cleaned))).c || '');
-  } catch {}
 
-  if (linkCurrency && linkCurrency !== profile.currency) {
-    return (
-      <div className="min-h-screen bg-[#F4F7F9] flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-5 text-3xl">💱</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-          This match is in {linkCurrency}
-        </h1>
-        <p className="text-gray-500 text-sm max-w-sm mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Your wallet is in {profile.currency}. For now you can only join matches played in your own currency.
-        </p>
-        <button
-          onClick={() => onNavigate('back')}
-          className="px-8 py-3.5 rounded-xl bg-[#16A34A] hover:bg-[#15803d] text-white font-bold text-sm transition-colors"
-          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
-        >
-          Go back
-        </button>
-      </div>
-    );
-  }
 
   const shownCode = (code.trim().split('/').filter(Boolean).pop() || 'DEMO42').slice(0, 10).toUpperCase();
   const game = GAME_DETAILS[match.game];
