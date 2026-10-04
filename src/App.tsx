@@ -428,6 +428,84 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
   );
 }
 
+// Change this to your own code before you push.
+const ADMIN_ACCESS_CODE = 'CHANGE-ME-2026';
+
+function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () => void }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [fails, setFails] = useState(0);
+  const [lockedFor, setLockedFor] = useState(0);
+
+  useEffect(() => {
+    if (lockedFor <= 0) return;
+    const t = setTimeout(() => setLockedFor(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [lockedFor]);
+
+  const submit = () => {
+    if (lockedFor > 0 || !code) return;
+    if (code.trim() === ADMIN_ACCESS_CODE) { onUnlock(); return; }
+    const n = fails + 1;
+    setCode('');
+    if (n >= 5) {
+      setFails(0);
+      setError('');
+      setLockedFor(30);
+    } else {
+      setFails(n);
+      setError(`Incorrect access code. ${5 - n} ${5 - n === 1 ? 'try' : 'tries'} left.`);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-6">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center animate-fade-up">
+        <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
+        <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Admin access</h1>
+        <p className="text-sm text-gray-500 mb-5" style={{ fontFamily: 'Inter, sans-serif' }}>
+          Enter the access code to open the admin console.
+        </p>
+        <input
+          type="password"
+          autoFocus
+          autoComplete="off"
+          value={code}
+          onChange={e => { setCode(e.target.value); setError(''); }}
+          onKeyDown={e => { if (e.key === 'Enter') submit(); }}
+          placeholder="Access code"
+          className={`w-full bg-white border-2 rounded-xl px-4 py-3 text-base text-center outline-none transition-colors ${
+            error || lockedFor > 0 ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-green-500'
+          }`}
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        />
+        {(error || lockedFor > 0) && (
+          <p className="text-xs text-red-500 mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {lockedFor > 0 ? `Too many attempts. Try again in ${lockedFor}s.` : error}
+          </p>
+        )}
+        <button
+          onClick={submit}
+          disabled={!code || lockedFor > 0}
+          className={`w-full mt-4 px-6 py-3 rounded-xl font-bold text-sm text-white transition-colors ${
+            !code || lockedFor > 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#16A34A] hover:bg-[#15803d]'
+          }`}
+          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          Unlock
+        </button>
+        <button
+          onClick={onCancel}
+          className="w-full mt-2 px-6 py-3 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-100 transition-colors"
+          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          Back to app
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: (s: string) => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -599,6 +677,9 @@ function AppInner() {
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>(saved.matchHistory ?? []);
   const [notifs, setNotifs] = useState<Notification[]>(saved.notifs ?? []);
   const [toast, setToast] = useState<Notification | null>(null)
+  const [adminUnlocked, setAdminUnlocked] = useState(() => {
+    try { return sessionStorage.getItem('proveit_admin_ok') === '1'; } catch { return false; }
+  });
 
   useEffect(() => {
     if (!toast) return;
@@ -656,6 +737,10 @@ function AppInner() {
   const admin = isAdmin(screen);
 
   const navigate = (s: string) => {
+    if (s !== 'back' && !s.startsWith('admin-')) {
+      try { sessionStorage.removeItem('proveit_admin_ok'); } catch {}
+      setAdminUnlocked(false);
+    }
     if (s === 'back') {
       setScreen(prevScreen);
       return;
@@ -678,7 +763,14 @@ function AppInner() {
     <>
       {showSplash && <SplashScreen onDone={() => { try { sessionStorage.setItem('proveit_splash_seen', '1'); } catch {} setShowSplash(false); }} />}
       {admin ? (
-        <AdminLayout screen={screen as AdminScreen} onNavigate={navigate} />
+        adminUnlocked ? (
+          <AdminLayout screen={screen as AdminScreen} onNavigate={navigate} />
+        ) : (
+          <AdminGate
+            onUnlock={() => { try { sessionStorage.setItem('proveit_admin_ok', '1'); } catch {} setAdminUnlocked(true); }}
+            onCancel={() => navigate('dashboard')}
+          />
+        )
       ) : (
         <ConsumerLayout
           screen={screen as ConsumerScreen}
