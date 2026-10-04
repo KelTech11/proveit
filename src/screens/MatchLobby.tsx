@@ -11,7 +11,7 @@ const DEFAULT_DRAFT: MatchDraft = { game: 'CODM', mode: '1v1', wager: 225, uid: 
 
 import { useProfile } from '../profile';
 
-export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void }) {
+export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, stats }: { onNavigate: (s: string) => void; matchDraft: MatchDraft | null; onLock: (amount: number) => void; onNotify: (type: 'match_invite', title: string, body: string) => void; stats: { wins: number; losses: number; streak: number; xp: number } }) {
   const { profile: me } = useProfile();
   const draft = matchDraft ?? DEFAULT_DRAFT;
   const game = GAME_DETAILS[draft.game];
@@ -24,6 +24,14 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
   const [chatText, setChatText] = useState('');
   const [chatMsgs, setChatMsgs] = useState<string[]>([]);
   const [matchId] = useState(() => `M-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [ping, setPing] = useState<number | null>(null);
+
+  useEffect(() => {
+    const t0 = performance.now();
+    fetch('/', { method: 'HEAD', cache: 'no-store' })
+      .then(() => setPing(Math.round(performance.now() - t0)))
+      .catch(() => setPing(null));
+  }, []);
 
   const sendChat = () => {
     const t = chatText.trim();
@@ -324,7 +332,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#84cc16" strokeWidth="2.5" className="sm:w-6 sm:h-6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               </div>
               <div>
-                <p className="font-black text-gray-900 text-sm sm:text-lg tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>87W / 23L</p>
+                <p className="font-black text-gray-900 text-sm sm:text-lg tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{stats.wins}W / {stats.losses}L</p>
                 <p className="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mt-0.5">Win / Loss Record</p>
               </div>
             </div>
@@ -335,7 +343,7 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="absolute sm:w-3 sm:h-3"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <p className="font-black text-gray-900 text-sm sm:text-lg tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>62W / 34L</p>
+                <p className="font-black text-gray-900 text-sm sm:text-lg tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>0W / 0L</p>
                 <p className="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mt-0.5">Record vs Opponent</p>
               </div>
             </div>
@@ -348,8 +356,8 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify }:
                  <div className="w-1.5 sm:w-2 h-2 sm:h-3 bg-gray-200 rounded-sm" />
               </div>
               <div>
-                <p className="text-gray-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5">Estimated Latency</p>
-                <p className="font-black text-[#16A34A] text-sm sm:text-lg tabular" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>~25 ms</p>
+                <p className="text-gray-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5">Your Connection</p>
+                <p className={`font-black text-sm sm:text-lg tabular ${ping !== null && ping > 150 ? 'text-amber-500' : 'text-[#16A34A]'}`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{ping !== null ? `${ping} ms` : '...'}</p>
               </div>
             </div>
           </div>
