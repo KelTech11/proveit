@@ -26,6 +26,9 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
   const [matchId] = useState(() => `M-${Math.floor(1000 + Math.random() * 9000)}`);
   const [ping, setPing] = useState<number | null>(null);
   const PING_OFFSET = 60; // site ping runs ~60 ms higher than in-game ping
+  const signalBars = ping === null ? 0 : ping <= 50 ? 4 : ping <= 80 ? 3 : ping <= 120 ? 2 : 1;
+  const signalBg = signalBars >= 3 ? 'bg-[#16A34A]' : signalBars === 2 ? 'bg-amber-400' : 'bg-red-500';
+  const signalText = signalBars >= 3 ? 'text-[#16A34A]' : signalBars === 2 ? 'text-amber-500' : 'text-red-500';
 
   useEffect(() => {
     let cancelled = false;
@@ -357,14 +360,16 @@ export default function MatchLobby({ onNavigate, matchDraft, onLock, onNotify, s
             
             <div className="flex items-center justify-center gap-4 pt-4 md:pt-0">
               <div className="flex items-end gap-1 h-6 sm:h-8 shrink-0">
-                 <div className="w-1.5 sm:w-2 h-3 sm:h-4 bg-[#16A34A] rounded-sm" />
-                 <div className="w-1.5 sm:w-2 h-4 sm:h-5 bg-[#16A34A] rounded-sm" />
-                 <div className="w-1.5 sm:w-2 h-6 sm:h-8 bg-gray-200 rounded-sm" />
-                 <div className="w-1.5 sm:w-2 h-2 sm:h-3 bg-gray-200 rounded-sm" />
+                 {['h-2 sm:h-3', 'h-3 sm:h-4', 'h-4 sm:h-6', 'h-6 sm:h-8'].map((h, i) => (
+                   <div
+                     key={i}
+                     className={`w-1.5 sm:w-2 ${h} rounded-sm transition-all duration-500 ${i < signalBars ? signalBg : 'bg-gray-200'}`}
+                   />
+                 ))}
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5">Your Connection</p>
-                <p className={`font-black text-sm sm:text-lg tabular ${ping !== null && ping > 150 ? 'text-amber-500' : 'text-[#16A34A]'}`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{ping !== null ? `${ping} ms` : '...'}</p>
+                <p className={`font-black text-sm sm:text-lg tabular ${signalText}`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{ping !== null ? `${ping} ms` : '...'}</p>
               </div>
             </div>
           </div>
