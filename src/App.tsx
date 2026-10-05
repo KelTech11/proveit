@@ -508,12 +508,51 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
 
 function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: (s: string) => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen" style={{ background: '#F3F4F6' }}>
+      {menuOpen && (
+        <div className="fixed inset-0 z-[70] md:hidden" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
+          <div
+            className="absolute left-4 right-4 bg-white rounded-2xl shadow-2xl border border-gray-200 p-2"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 64px)' }}
+          >
+            <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>Operations</p>
+            {ADMIN_NAV.map(item => {
+              const Icon = item.icon;
+              const active = screen === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => { setMenuOpen(false); onNavigate(item.id as Screen); }}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-left ${
+                    active ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  <Icon size={18} className={active ? 'text-green-600' : 'text-gray-500'} />
+                  {item.label}
+                </button>
+              );
+            })}
+            <div className="border-t border-gray-100 mt-1 pt-1">
+              <button
+                onClick={() => { setMenuOpen(false); onNavigate('dashboard'); }}
+                className="w-full px-3 py-3 rounded-xl text-sm font-medium text-left text-gray-500 hover:bg-gray-50"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                ← Switch to Consumer App
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col transition-all duration-200 ${sidebarOpen ? 'w-56' : 'w-16'}`}
+        className={`fixed left-0 top-0 bottom-0 z-40 hidden md:flex flex-col transition-all duration-200 ${sidebarOpen ? 'w-56' : 'w-16'}`}
         style={{ background: '#111827' }}
       >
         {/* Logo */}
@@ -580,15 +619,24 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
       </aside>
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${sidebarOpen ? 'ml-56' : 'ml-16'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-200 ${sidebarOpen ? 'md:ml-56' : 'md:ml-16'}`}>
         {/* Top utility bar */}
-        <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <div className="relative">
+        <header className="flex items-center justify-between gap-3 px-4 md:px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-30">
+          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none">
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden shrink-0 w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-700 hover:bg-gray-50"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+            <div className="relative min-w-0 flex-1 md:flex-none">
               <input
                 type="search"
                 placeholder="Search matches, players, disputes..."
-                className="pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 w-72"
+                className="pl-8 pr-4 py-2 text-base md:text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 w-full md:w-72"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               />
               <svg className="absolute left-2.5 top-2.5 text-gray-400" width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -614,7 +662,7 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
         </header>
 
         {/* Screen content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 min-w-0 p-4 md:p-6">
           <Suspense fallback={<ScreenFallback />}>
             {screen === 'admin-overview' && <AdminOverview onNavigate={onNavigate} />}
             {screen === 'admin-match-feed' && <AdminMatchFeed onNavigate={onNavigate} />}
