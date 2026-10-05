@@ -34,8 +34,8 @@ export default function Login({ onNavigate }: { onNavigate: (s: string) => void 
         return;
       }
       setLoginError(
-        result === 'no-account'
-          ? 'No account found on this device. Tap Create Account to make one.'
+        result === 'offline'
+          ? "Can't reach the server. Make sure the backend is running."
           : 'Wrong username or password.'
       );
       return;

@@ -16,6 +16,13 @@ const loadDraft = () => {
   try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch { return {}; }
 };
 
+const isOver18 = (dob: string) => {
+  if (!dob) return false;
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 18);
+  return new Date(dob) <= cutoff;
+};
+
 export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: (s: string) => void; onSignedUp: () => void }) {
   const [draft] = useState<any>(loadDraft);
   const [unlocked, setUnlocked] = useState(() => {
@@ -36,6 +43,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   const [otp, setOtp] = useState('');
 
   // Step 3
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [isAdult, setIsAdult] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [underageBlocked, setUnderageBlocked] = useState(false);
@@ -58,6 +66,8 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
 
   // Step 7 (submitted state)
   const [submitted, setSubmitted] = useState(!!draft.submitted);
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const [tried, setTried] = useState(false);
   const next = () => { setTried(false); setStep(s => Math.min(s + 1, 7) as Step); };
@@ -130,6 +140,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   if (!/^\d{6}$/.test(otp.trim())) e2.otp = 'Enter the 6-digit code we sent you';
 
   const e3: Record<string, string> = {};
+  if (!dateOfBirth) e3.dob = 'Enter your date of birth';
   if (!agreedTerms) e3.terms = 'You need to agree to continue';
 
   const e4: Record<string, string> = {};
@@ -201,7 +212,7 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   };
 
   const handleEligibilityNext = () => {
-    if (!isAdult) {
+    if (!isAdult || !isOver18(dateOfBirth)) {
       setUnderageBlocked(true);
       return;
     }
@@ -211,13 +222,32 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
   const { updateProfile } = useProfile();
 
   const handleSubmit = async () => {
+    if (submitting) return;
+    if (!isOver18(dateOfBirth)) {
+      setSubmitError('Please go back to step 3 and enter your date of birth.');
+      return;
+    }
     const d = phone.replace(/\D/g, '');
     const formattedPhone = country === 'GH'
       ? `${dialCode} ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
       : `${dialCode} ${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
     const linkedGames = selectedGame === 'codm' ? { CODM: gameUid } : { 'FC Mobile': gameUid };
-    // Save the account first so the new profile is stored under the new username
-    await saveAccount({ username, email: email.trim(), phone: formattedPhone, password });
+    // Create the account on the server first. Stop here if it fails.
+    setSubmitting(true);
+    setSubmitError('');
+    const result = await saveAccount({
+      fullName: fullName.trim().replace(/\b\w/g, c => c.toUpperCase()),
+      username,
+      email: email.trim(),
+      phone: formattedPhone,
+      password,
+      dateOfBirth,
+    });
+    setSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
     updateProfile({
       name: fullName.trim().replace(/\b\w/g, c => c.toUpperCase()),
       username,
@@ -475,6 +505,23 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
               <p className="text-gray-500 text-sm mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
                 A few things we need to confirm
               </p>
+
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={e => setDateOfBirth(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-xl border-2 text-base focus:border-green-500 focus:outline-none ${tried && e3.dob ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+                {tried && e3.dob && (
+                  <p className="field-error text-xs text-red-500 mt-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>{e3.dob}</p>
+                )}
+              </div>
 
               <label className="flex items-start gap-3 mb-4 p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-green-300 transition-colors">
                 <input
@@ -797,10 +844,16 @@ export default function CreateAccount({ onNavigate, onSignedUp }: { onNavigate: 
                 This usually takes a few hours.
               </p>
 
+              {submitError && (
+                <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-3 py-2.5">
+                  <p className="text-xs font-semibold text-red-700" style={{ fontFamily: 'Inter, sans-serif' }}>{submitError}</p>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button variant="ghost" size="lg" onClick={back}>Back</Button>
-                <Button variant="primary" size="lg" fullWidth onClick={handleSubmit}>
-                  Submit
+                <Button variant="primary" size="lg" fullWidth onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit'}
                 </Button>
               </div>
             </div>

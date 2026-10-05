@@ -2,6 +2,18 @@
 const LEGACY_KEY = 'proveit_account';
 const CURRENT_KEY = 'proveit_current';
 
+// Backend address. Local only for now.
+const API_URL = 'http://localhost:3000';
+const TOKEN_KEY = 'proveit_token';
+
+export const getToken = (): string => {
+  try {
+    return localStorage.getItem(TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+};
+
 export type Account = { username: string; email: string; phone: string; hash: string };
 
 const fallbackHash = (text: string) => {
@@ -67,20 +79,83 @@ export const loadAccount = (): Account | null => {
   return map[currentUser()] ?? Object.values(map)[0] ?? null;
 };
 
-export const saveAccount = async (data: { username: string; email: string; phone: string; password: string }) => {
+// Logs in on the server and keeps the token. Returns the user, or why it failed.
+const requestLogin = async (identifier: string, password: string): Promise<{ user: any } | 'wrong' | 'offline'> => {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, password }),
+    });
+  } catch {
+    return 'offline';
+  }
+  if (!res.ok) return 'wrong';
+  const body = await res.json();
+  try {
+    localStorage.setItem(TOKEN_KEY, body.accessToken);
+  } catch {}
+  return { user: body.user };
+};
+
+export const saveAccount = async (data: {
+  fullName: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  dateOfBirth: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> => {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: data.fullName,
+        username: data.username,
+        phone: data.phone.replace(/\s/g, ''),
+        email: data.email,
+        password: data.password,
+        dateOfBirth: data.dateOfBirth,
+      }),
+    });
+  } catch {
+    return { ok: false, error: "Can't reach the server. Make sure the backend is running." };
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    const msg = Array.isArray(body?.message) ? body.message[0] : body?.message;
+    return { ok: false, error: msg || 'Could not create your account. Try again.' };
+  }
+
+  // Keep a local copy so the rest of the app keeps working
   const hash = await hashPassword(data.username, data.password);
   const map = readAccounts();
   map[data.username] = { username: data.username, email: data.email, phone: data.phone, hash };
   writeAccounts(map);
   setCurrentUser(data.username);
+  await requestLogin(data.username, data.password);
+  return { ok: true };
 };
 
-export const checkLogin = async (username: string, password: string): Promise<'ok' | 'no-account' | 'wrong'> => {
+export const checkLogin = async (username: string, password: string): Promise<'ok' | 'wrong' | 'offline'> => {
+  const result = await requestLogin(username, password);
+  if (result === 'offline') return 'offline';
+  if (result === 'wrong') return 'wrong';
+
+  // Make sure this device has a local record for the account
   const map = readAccounts();
-  if (Object.keys(map).length === 0) return 'no-account';
-  const a = map[username];
-  if (!a) return 'wrong';
-  if ((await hashPassword(username, password)) !== a.hash) return 'wrong';
+  if (!map[username]) {
+    map[username] = {
+      username,
+      email: result.user.email ?? '',
+      phone: result.user.phone ?? '',
+      hash: await hashPassword(username, password),
+    };
+    writeAccounts(map);
+  }
   setCurrentUser(username);
   return 'ok';
 };
