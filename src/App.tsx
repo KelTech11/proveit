@@ -7,6 +7,7 @@ import { fromGhs } from './currency';
 import FeedbackButton from './screens/FeedbackButton';
 import type { MatchDraft } from './screens/CreateMatch';
 import { ProfileProvider, useProfile } from './profile';
+import type { LiveState } from './platform';
 
 // Consumer screens
 const Home = lazy(() => import('./screens/Home'));
@@ -506,7 +507,7 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
   );
 }
 
-function AdminLayout({ screen, onNavigate, selectedDisputeId, selectedUserId }: { screen: AdminScreen; onNavigate: (s: string, id?: string) => void; selectedDisputeId: string | null; selectedUserId: string | null }) {
+function AdminLayout({ screen, onNavigate, selectedDisputeId, selectedUserId, live }: { screen: AdminScreen; onNavigate: (s: string, id?: string) => void; selectedDisputeId: string | null; selectedUserId: string | null; live: Omit<LiveState, 'username' | 'country' | 'currency'> }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -664,7 +665,7 @@ function AdminLayout({ screen, onNavigate, selectedDisputeId, selectedUserId }: 
         {/* Screen content */}
         <main className="flex-1 min-w-0 p-4 md:p-6">
           <Suspense fallback={<ScreenFallback />}>
-            {screen === 'admin-overview' && <AdminOverview onNavigate={onNavigate} />}
+            {screen === 'admin-overview' && <AdminOverview onNavigate={onNavigate} live={live} />}
             {screen === 'admin-match-feed' && <AdminMatchFeed onNavigate={onNavigate} />}
             {screen === 'admin-dispute-queue' && <AdminDisputeQueue onNavigate={onNavigate} />}
             {screen === 'admin-dispute-resolution' && <AdminDisputeResolution onNavigate={onNavigate} matchId={selectedDisputeId} />}
@@ -838,6 +839,7 @@ function AppInner() {
             }}
             selectedDisputeId={selectedDisputeId}
             selectedUserId={selectedUserId}
+            live={{ locked, stats, history: matchHistory, disputeActive, verified }}
           />
         ) : (
           <AdminGate

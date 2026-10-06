@@ -26,6 +26,7 @@ const GameIcon = ({ game }: { game: string }) => {
 
 import { useProfile } from '../profile';
 import { fromGhs } from '../currency';
+import { platformStats } from '../platform';
 
 export default function Dashboard({ onNavigate, balance, locked, unread, verified, disputeActive, stats, matchDraft }: { onNavigate: (s: string) => void; balance: number; locked: number; unread: number; verified: boolean; disputeActive: boolean; stats: { wins: number; losses: number; streak: number; xp: number }; matchDraft: MatchDraft | null }) {
   const { profile: me } = useProfile();
@@ -36,6 +37,7 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
     const t = n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
     return `${me.currency} ${t}`;
   };
+  const plat = platformStats({ locked, currency: me.currency, username: me.username, country: me.country, stats, disputeActive, verified });
   const liveBattle = matchDraft && locked > 0
     ? { draft: matchDraft, game: GAME_DETAILS[matchDraft.game], opponent: opponentFor(me.country) }
     : null;
@@ -234,14 +236,14 @@ export default function Dashboard({ onNavigate, balance, locked, unread, verifie
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Platform Live Feed</h4>
                   </div>
                   <p className="text-3xl font-black text-gray-900 mb-2 tracking-tight" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                    {compactMoney(480000)}
+                    {money(plat.escrowGhs)}
                   </p>
                   <p className="text-xs text-gray-500 font-medium leading-relaxed pr-4">Total funds securely locked in escrow across Ghana & Nigeria.</p>
                 </div>
                 
                 <div className="mt-6 flex items-center justify-between border-t border-gray-50 pt-4">
                   <span className="text-[11px] font-bold text-gray-500">Matches Settled</span>
-                  <span className="text-sm font-black text-gray-900 flex items-center gap-1">2,340 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+                  <span className="text-sm font-black text-gray-900 flex items-center gap-1">{plat.settled.toLocaleString('en-US')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
                 </div>
               </div>
 

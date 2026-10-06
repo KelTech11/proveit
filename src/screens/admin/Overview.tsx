@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import {
-  StatCard, Button, Card,
+  Button, Card,
   IconAlertTriangle, IconCheck, IconShield, IconArrowRight, IconClock,
 } from '../../components/ui';
-import { adminStats } from '../../data';
+import { useProfile } from '../../profile';
+import { platformStats, type LiveState } from '../../platform';
 
-const activityFeed = [
-  { id: 1, type: 'resolve', icon: '✅', text: 'Match M-7831 resolved — SeunPro wins NGN 29,000', time: '4 min ago' },
-  { id: 2, type: 'dispute', icon: '🚨', text: 'Dispute raised — M-7835, CODM, GHS 200', time: '12 min ago' },
-  { id: 3, type: 'kyc', icon: '🆔', text: 'KYC submitted — AbenaElite, GH', time: '28 min ago' },
-  { id: 4, type: 'resolve', icon: '✅', text: 'Match M-7839 completed — TundeSniper vs EmkaBeast', time: '41 min ago' },
-  { id: 5, type: 'payout', icon: '💸', text: 'Withdrawal processed — GHS 870 to MTN MM', time: '1h ago' },
-  { id: 6, type: 'dispute', icon: '🚨', text: 'Dispute raised — M-7821, eFootball, NGN 50K', time: '2h ago' },
-  { id: 7, type: 'kyc', icon: '🆔', text: 'KYC approved — TundeSniper, NG', time: '3h ago' },
-  { id: 8, type: 'resolve', icon: '✅', text: 'Match M-7815 resolved — KwameGOAT wins GHS 570', time: '4h ago' },
-];
 
-export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) => void }) {
-  const { chartData } = adminStats;
-  const maxMatches = Math.max(...chartData.map(d => d.matches));
+
+export default function AdminOverview({ onNavigate, live }: { onNavigate: (s: string) => void; live: Omit<LiveState, 'username' | 'country' | 'currency'> }) {
+  const { profile } = useProfile();
+  const p = platformStats({ ...live, username: profile.username, country: profile.country, currency: profile.currency });
+  const { chartData } = p;
+  const maxMatches = Math.max(1, ...chartData.map(d => d.matches));
+  const now = new Date();
+  const todayLabel = `${now.toLocaleDateString('en-US', { weekday: 'long' })}, ${now.getDate()} ${now.toLocaleDateString('en-US', { month: 'short' })} ${now.getFullYear()}`;
 
   const svgWidth = 400;
   const svgHeight = 200;
@@ -33,7 +29,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
 
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
-  const yLabels = [0, Math.round(maxMatches * 0.25), Math.round(maxMatches * 0.5), Math.round(maxMatches * 0.75), maxMatches];
+  const yLabels = Array.from(new Set([0, Math.round(maxMatches * 0.25), Math.round(maxMatches * 0.5), Math.round(maxMatches * 0.75), maxMatches]));
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6 animate-fade-up">
@@ -44,7 +40,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
             Operations Overview
           </h1>
           <p className="text-sm text-gray-500 mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Thursday, 25 Sep 2025
+            {todayLabel}
           </p>
         </div>
         <div className="flex gap-3 flex-wrap">
@@ -54,7 +50,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
             onClick={() => onNavigate('admin-dispute-queue')}
           >
             <IconAlertTriangle size={16} />
-            Resolve Disputes
+            Resolve Disputes ({p.pendingDisputes})
           </Button>
           <Button
             variant="secondary"
@@ -62,42 +58,27 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
             onClick={() => onNavigate('admin-user-profile')}
           >
             <IconShield size={16} />
-            Review KYC
+            Review KYC ({p.kycQueue})
           </Button>
         </div>
       </div>
 
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Total Escrow Volume"
-          value="GHS 480K"
-          trend="+12.4%"
-          subtext="this week"
-        />
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.06em' }}>
-            Pending Disputes
-          </p>
-          <p className="text-2xl font-bold tabular text-amber-500" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>42</p>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs font-semibold text-red-500">+8</span>
-            <p className="text-xs text-gray-400">since yesterday</p>
+        {[
+          { label: 'Total Escrow Volume', value: `GHS ${p.escrowGhs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub: `${p.escrowCount} ${p.escrowCount === 1 ? 'match' : 'matches'} held in escrow`, tone: 'text-gray-900' },
+          { label: 'Pending Disputes', value: String(p.pendingDisputes), sub: p.oldestWait ? `oldest waiting ${p.oldestWait}` : 'none waiting', tone: 'text-amber-500' },
+          { label: 'KYC Queue', value: String(p.kycQueue), sub: 'awaiting review', tone: 'text-gray-900' },
+          { label: 'Matches Settled', value: p.settled.toLocaleString('en-US'), sub: `${p.settled24} in the last 24h`, tone: 'text-green-600' },
+        ].map(c => (
+          <div key={c.label} className="bg-white border border-gray-200 rounded-xl p-4 min-w-0">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.06em' }}>
+              {c.label}
+            </p>
+            <p className={`text-xl sm:text-2xl font-bold tabular truncate ${c.tone}`} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>{c.value}</p>
+            <p className="text-xs text-gray-400 mt-2">{c.sub}</p>
           </div>
-        </div>
-        <StatCard
-          label="KYC Queue"
-          value="18"
-          trend="-3"
-          subtext="resolved today"
-        />
-        <StatCard
-          label="Matches Settled"
-          value="2,340"
-          trend="+187"
-          subtext="today"
-          accent
-        />
+        ))}
       </div>
 
       {/* Chart + Activity Feed */}
@@ -226,7 +207,8 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
             </button>
           </div>
           <div className="space-y-1">
-            {activityFeed.map((item) => (
+            {p.activity.length === 0 && <p className="text-xs text-gray-400 px-2 py-6 text-center">No activity yet.</p>}
+            {p.activity.map((item) => (
               <div
                 key={item.id}
                 className="flex items-start gap-3 px-2 py-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-default group"
@@ -258,7 +240,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
               <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                 Payment Rails
               </p>
-              <p className="text-xs text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>All systems operational</p>
+              <p className="text-xs text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>Sandbox mode · no live money</p>
             </div>
           </div>
         </Card>
@@ -271,7 +253,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
               <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
                 Escrow Engine
               </p>
-              <p className="text-xs text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>Healthy · 0 stuck txns</p>
+              <p className="text-xs text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>{`Healthy · ${p.escrowCount} held in escrow`}</p>
             </div>
           </div>
         </Card>
@@ -282,9 +264,9 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-                KYC Provider
+                KYC Review
               </p>
-              <p className="text-xs text-amber-600" style={{ fontFamily: 'Inter, sans-serif' }}>Elevated latency · 1.4s</p>
+              <p className="text-xs text-amber-600" style={{ fontFamily: 'Inter, sans-serif' }}>{p.kycQueue} awaiting review</p>
             </div>
           </div>
         </Card>
