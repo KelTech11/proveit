@@ -506,7 +506,7 @@ function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () 
   );
 }
 
-function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: (s: string) => void }) {
+function AdminLayout({ screen, onNavigate, selectedDisputeId, selectedUserId }: { screen: AdminScreen; onNavigate: (s: string, id?: string) => void; selectedDisputeId: string | null; selectedUserId: string | null }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -667,8 +667,8 @@ function AdminLayout({ screen, onNavigate }: { screen: AdminScreen; onNavigate: 
             {screen === 'admin-overview' && <AdminOverview onNavigate={onNavigate} />}
             {screen === 'admin-match-feed' && <AdminMatchFeed onNavigate={onNavigate} />}
             {screen === 'admin-dispute-queue' && <AdminDisputeQueue onNavigate={onNavigate} />}
-            {screen === 'admin-dispute-resolution' && <AdminDisputeResolution onNavigate={onNavigate} />}
-            {screen === 'admin-user-profile' && <AdminUserProfile onNavigate={onNavigate} />}
+            {screen === 'admin-dispute-resolution' && <AdminDisputeResolution onNavigate={onNavigate} matchId={selectedDisputeId} />}
+            {screen === 'admin-user-profile' && <AdminUserProfile onNavigate={onNavigate} userId={selectedUserId} />}
           </Suspense>
         </main>
 
@@ -725,6 +725,8 @@ function AppInner() {
   const [matchHistory, setMatchHistory] = useState<MatchRecord[]>(saved.matchHistory ?? []);
   const [notifs, setNotifs] = useState<Notification[]>(saved.notifs ?? []);
   const [toast, setToast] = useState<Notification | null>(null)
+  const [selectedDisputeId, setSelectedDisputeId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [adminUnlocked, setAdminUnlocked] = useState(() => {
     try { return sessionStorage.getItem('proveit_admin_ok') === '1'; } catch { return false; }
   });
@@ -827,7 +829,16 @@ function AppInner() {
       {showSplash && <SplashScreen onDone={() => { try { sessionStorage.setItem('proveit_splash_seen', '1'); } catch {} setShowSplash(false); }} />}
       {admin ? (
         adminUnlocked ? (
-          <AdminLayout screen={screen as AdminScreen} onNavigate={navigate} />
+          <AdminLayout
+            screen={screen as AdminScreen}
+            onNavigate={(target, id) => {
+              if (target === 'admin-dispute-resolution' && id) setSelectedDisputeId(id);
+              if (target === 'admin-user-profile' && id) setSelectedUserId(id);
+              navigate(target);
+            }}
+            selectedDisputeId={selectedDisputeId}
+            selectedUserId={selectedUserId}
+          />
         ) : (
           <AdminGate
             onUnlock={() => { try { sessionStorage.setItem('proveit_admin_ok', '1'); } catch {} setAdminUnlocked(true); }}

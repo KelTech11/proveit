@@ -51,18 +51,18 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (s: string) 
           <Button
             variant="primary"
             size="sm"
-            onClick={() => onNavigate('dispute-queue')}
+            onClick={() => onNavigate('admin-dispute-queue')}
           >
             <IconAlertTriangle size={16} />
-            Resolve Disputes (42)
+            Resolve Disputes
           </Button>
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => onNavigate('user-profile')}
+            onClick={() => onNavigate('admin-user-profile')}
           >
             <IconShield size={16} />
-            Review KYC (18)
+            Review KYC
           </Button>
         </div>
       </div>

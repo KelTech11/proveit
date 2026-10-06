@@ -191,7 +191,7 @@ export default function AdminMatchFeed({ onNavigate }: { onNavigate: (s: string)
                   <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} /> {st.label}
                 </span>
                 <button
-                  onClick={() => onNavigate(disputed ? 'dispute-resolution' : 'match-feed')}
+                  onClick={() => disputed && onNavigate('admin-dispute-resolution')}
                   className="w-9 h-9 rounded-full bg-gray-50 group-hover:bg-[#16A34A] group-hover:text-white text-gray-500 flex items-center justify-center transition-all group-hover:translate-x-1"
                   aria-label="View match"
                 >
