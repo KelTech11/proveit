@@ -432,6 +432,36 @@ function ConsumerLayout({ screen, onNavigate, matchDraft, onMatchCreated, balanc
 // Change this to your own code before you push.
 const ADMIN_ACCESS_CODE = 'CHANGE-ME-2026';
 
+// Set to false to bring the admin console back
+const ADMIN_UNDER_DEVELOPMENT = true;
+
+function AdminUnderDevelopment({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-6">
+      <style>{`@keyframes dev-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }`}</style>
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center animate-fade-up">
+        <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4 text-2xl">🛠️</div>
+        <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
+          Admin console under development
+        </h1>
+        <p className="text-sm text-gray-500 mb-5" style={{ fontFamily: 'Inter, sans-serif' }}>
+          We're building the tools for reviewing matches, disputes and verifications. Check back soon.
+        </p>
+        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden mb-6">
+          <div className="h-full w-2/5 bg-[#16A34A] rounded-full" style={{ animation: 'dev-bar 1.6s ease-in-out infinite' }} />
+        </div>
+        <button
+          onClick={onBack}
+          className="w-full px-6 py-3 rounded-xl font-bold text-sm text-white bg-[#16A34A] hover:bg-[#15803d] transition-colors"
+          style={{ fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          Back to app
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () => void }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -829,7 +859,9 @@ function AppInner() {
     <>
       {showSplash && <SplashScreen onDone={() => { try { sessionStorage.setItem('proveit_splash_seen', '1'); } catch {} setShowSplash(false); }} />}
       {admin ? (
-        adminUnlocked ? (
+        ADMIN_UNDER_DEVELOPMENT ? (
+          <AdminUnderDevelopment onBack={() => navigate('dashboard')} />
+        ) : adminUnlocked ? (
           <AdminLayout
             screen={screen as AdminScreen}
             onNavigate={(target, id) => {
